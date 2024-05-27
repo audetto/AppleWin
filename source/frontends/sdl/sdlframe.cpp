@@ -3,6 +3,7 @@
 #include "frontends/sdl/sdlframe.h"
 #include "frontends/sdl/utils.h"
 #include "frontends/sdl/sdirectsound.h"
+#include "frontends/sdl/sdlcompat.h"
 #include "frontends/common2/programoptions.h"
 #include "frontends/common2/utils.h"
 
@@ -21,7 +22,11 @@
 
 #include <algorithm>
 
-#include <SDL_image.h>
+#ifdef SA2_SDL3
+  #include <SDL3_image/SDL_image.h>
+#else
+  #include <SDL_image.h>
+#endif
 
 // #define KEY_LOGGING_VERBOSE
 
@@ -140,7 +145,7 @@ namespace sa2
 
   void SDLFrame::SetGLSynchronisation(const common2::EmulatorOptions & options)
   {
-    const int defaultGLSwap = SDL_GL_GetSwapInterval();
+    const int defaultGLSwap = compat::getGLSwapInterval();
     if (defaultGLSwap == 0)
     {
       // sane default
@@ -173,7 +178,7 @@ namespace sa2
 
   void SDLFrame::setGLSwapInterval(const int interval)
   {
-    const int current = SDL_GL_GetSwapInterval();
+    const int current = compat::getGLSwapInterval();
     // in QEMU with GL_RENDERER: llvmpipe (LLVM 12.0.0, 256 bits)
     // SDL_GL_SetSwapInterval() always fails
     if (interval != current && SDL_GL_SetSwapInterval(interval))
@@ -220,7 +225,7 @@ namespace sa2
     std::shared_ptr<SDL_Surface> surface(SDL_LoadBMP(path.c_str()), SDL_FreeSurface);
     if (surface)
     {
-      SDL_LockSurface(surface.get());
+      int res = SDL_LockSurface(surface.get());
 
       const char * source = static_cast<char *>(surface->pixels);
       const size_t size = surface->h * surface->w / 8;
@@ -230,16 +235,28 @@ namespace sa2
 
       char * dest = static_cast<char *>(lpvBits);
 
-      for (size_t i = 0; i < copied; ++i)
+      switch (SA2_IMAGE_BITS(surface))
       {
-        const size_t offset = i * 8;
-        char val = 0;
-        for (size_t j = 0; j < 8; ++j)
+      case 1:
+      {
+        memcpy(dest, source, copied);
+        break;
+      }
+      case 8:
+      {
+        for (size_t i = 0; i < copied; ++i)
         {
-          const char pixel = *(source + offset + j);
-          val = (val << 1) | pixel;
+          const size_t offset = i * 8;
+          char val = 0;
+          for (size_t j = 0; j < 8; ++j)
+          {
+            const char pixel = *(source + offset + j);
+            val = (val << 1) | pixel;
+          }
+          dest[i] = val;
         }
-        dest[i] = val;
+        break;
+      }
       }
 
       SDL_UnlockSurface(surface.get());
@@ -307,12 +324,14 @@ namespace sa2
     case SDL_DROPFILE:
       {
         ProcessDropEvent(e.drop);
+#if !SDL_VERSION_ATLEAST(3, 0, 0)
         SDL_free(e.drop.file);
+#endif
         break;
       }
     case SDL_CONTROLLERBUTTONDOWN:
       {
-        if (e.cbutton.button == SDL_CONTROLLER_BUTTON_BACK)  // SELECT
+        if (SA2_CONTROLLER_BUTTON(e) == SDL_CONTROLLER_BUTTON_BACK)  // SELECT
         {
           quit = myControllerQuit.pressButton();
         }
@@ -413,7 +432,7 @@ namespace sa2
 
   void SDLFrame::ProcessDropEvent(const SDL_DropEvent & drop)
   {
-    processFile(this, drop.file, myDragAndDropSlot, myDragAndDropDrive);
+    processFile(this, SA2_DROP_FILE(drop), myDragAndDropSlot, myDragAndDropDrive);
   }
 
   void SDLFrame::ProcessKeyDown(const SDL_KeyboardEvent & key, bool &quit)
@@ -472,7 +491,7 @@ namespace sa2
           else if (modifiers == KMOD_NONE)
           {
             myFullscreen = !myFullscreen;
-            SDL_SetWindowFullscreen(myWindow.get(), myFullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
+            SDL_SetWindowFullscreen(myWindow.get(), myFullscreen ? SDL_TRUE : SDL_FALSE);
           }
           break;
         }

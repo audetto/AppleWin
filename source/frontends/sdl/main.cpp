@@ -1,5 +1,3 @@
-#include <SDL.h>
-
 #include <iostream>
 #include <memory>
 #include <iomanip>
@@ -14,6 +12,7 @@
 #include "frontends/common2/timer.h"
 #include "frontends/sdl/gamepad.h"
 #include "frontends/sdl/sdirectsound.h"
+#include "frontends/sdl/sdlcompat.h"
 #include "frontends/sdl/utils.h"
 
 #include "frontends/sdl/renderer/sdlrendererframe.h"
@@ -31,16 +30,8 @@ namespace
 
   int getRefreshRate()
   {
-    SDL_DisplayMode current;
-
-    const int should_be_zero = SDL_GetCurrentDisplayMode(0, &current);
-
-    if (should_be_zero)
-    {
-      throw std::runtime_error(sa2::decorateSDLError("SDL_GetCurrentDisplayMode"));
-    }
-
-    return current.refresh_rate ? current.refresh_rate : 60;
+    const SDL_DisplayMode * current = sa2::compat::getCurrentDisplayMode();
+    return current->refresh_rate ? current->refresh_rate : 60;
   }
 
   struct Data
@@ -82,7 +73,7 @@ void run_sdl(int argc, const char * argv [])
     frame = std::make_shared<sa2::SDLRendererFrame>(options);
   }
 
-  std::cerr << "Default GL swap interval: " << SDL_GL_GetSwapInterval() << std::endl;
+  std::cerr << "Default GL swap interval: " << sa2::compat::getGLSwapInterval() << std::endl;
 
   const common2::CommonInitialisation init(frame, paddle, options);
 

@@ -27,7 +27,9 @@ namespace sa2
     
     const int iscapture = 0;
 
-#if SDL_VERSION_ATLEAST(2, 24, 0)
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    // not relevant in SDL3
+#elif SDL_VERSION_ATLEAST(2, 24, 0)
     char *defaultDevice = nullptr;
     SDL_AudioSpec spec;
     if (!SDL_GetDefaultAudioInfo(&defaultDevice, &spec, iscapture))
@@ -43,10 +45,12 @@ namespace sa2
     }
     os << std::endl;
 
+#if !SDL_VERSION_ATLEAST(3, 0, 0)
     for (int i = 0; i < SDL_GetNumAudioDevices(iscapture); ++i)
     {
       os << INDENT << SDL_GetAudioDeviceName(i, iscapture) << std::endl;
     }
+#endif
   }
 
   void printRendererInfo(std::ostream & os,
@@ -61,19 +65,24 @@ namespace sa2
     os << "SDL Render driver:" << std::endl;
     for(size_t i = 0; i < n; ++i)
     {
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+      os << INDENT << i << ": " << SDL_GetRenderDriver(i) << std::endl;
+#else
       SDL_RendererInfo info;
       SDL_GetRenderDriverInfo(i, &info);
       os << INDENT << i << ": " << info.name << std::endl;
+#endif
     }
 
     if (SDL_GetRendererInfo(ren.get(), &info) == 0)
     {
       os << "Active driver (" << selectedDriver << "): " << info.name << std::endl;
+#if !SDL_VERSION_ATLEAST(3, 0, 0)
+      os << INDENT << "SDL_RENDERER_PRESENTVSYNC: " << ((info.flags & SDL_RENDERER_PRESENTVSYNC) > 0) << std::endl;
       os << INDENT << "SDL_RENDERER_SOFTWARE: " << ((info.flags & SDL_RENDERER_SOFTWARE) > 0) << std::endl;
       os << INDENT << "SDL_RENDERER_ACCELERATED: " << ((info.flags & SDL_RENDERER_ACCELERATED) > 0) << std::endl;
-      os << INDENT << "SDL_RENDERER_PRESENTVSYNC: " << ((info.flags & SDL_RENDERER_PRESENTVSYNC) > 0) << std::endl;
       os << INDENT << "SDL_RENDERER_TARGETTEXTURE: " << ((info.flags & SDL_RENDERER_TARGETTEXTURE) > 0) << std::endl;
-
+#endif
       os << "Pixel format: " << SDL_GetPixelFormatName(pixelFormat) << std::endl;
       for (size_t i = 0; i < info.num_texture_formats; ++i)
       {

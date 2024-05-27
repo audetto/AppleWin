@@ -1,0 +1,136 @@
+#include "frontends/sdl/sdlcompat.h"
+#include "frontends/sdl/utils.h"
+#include "frontends/common2/programoptions.h"
+
+#include <stdexcept>
+
+namespace sa2
+{
+  namespace compat
+  {
+
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    int getNumJoysticks()
+    {
+      int count = 0;
+      SDL_JoystickID* joy = SDL_GetJoysticks(&count);
+      if (!joy)
+      {
+        throw std::runtime_error(decorateSDLError("SDL_GetJoysticks"));
+      }
+      SDL_free(joy);
+      return count;
+    }
+
+    int getGLSwapInterval()
+    {
+      int interval = 0;
+      if (SDL_GL_GetSwapInterval(&interval))
+      {
+        throw std::runtime_error(decorateSDLError("SDL_GL_GetSwapInterval"));
+      }
+      return interval;
+    }
+
+    const SDL_DisplayMode * getCurrentDisplayMode()
+    {
+      int count = 0;
+      SDL_DisplayID * displays = SDL_GetDisplays(&count);
+      if (displays)
+      {
+        const SDL_DisplayMode * mode = SDL_GetCurrentDisplayMode(*displays);
+        SDL_free(displays);
+        return mode;
+      }
+      throw std::runtime_error(decorateSDLError("SDL_GetDisplays"));
+    }
+
+    void pauseAudioDevice(SDL_AudioDeviceID dev)
+    {
+      SDL_PauseAudioDevice(dev);
+    }
+
+    void resumeAudioDevice(SDL_AudioDeviceID dev)
+    {
+      SDL_ResumeAudioDevice(dev);
+    }
+
+    void toggleCursor()
+    {
+      if (SDL_CursorVisible() == SDL_TRUE)
+      {
+        SDL_HideCursor();
+      }
+      else
+      {
+        SDL_ShowCursor();
+      }
+    }
+
+    SDL_Window * createWindow(const char *title, const common2::Geometry & geometry, SDL_WindowFlags flags)
+    {
+      return SDL_CreateWindow(title, geometry.width, geometry.height, flags);
+    }
+
+    SDL_Renderer * createRenderer(SDL_Window * window, const int index)
+    {
+      // I am not sure whether we should worry about SDL_PROP_RENDERER_CREATE_PRESENT_VSYNC_NUMBER
+      const char * name = index >= 0 ? SDL_GetRenderDriver(index) : nullptr;
+
+      return SDL_CreateRenderer(window, name);
+    }
+
+#else
+
+    int getNumJoysticks()
+    {
+      return SDL_NumJoysticks();
+    }
+
+    int getGLSwapInterval()
+    {
+      return SDL_GL_GetSwapInterval();
+    }
+
+    const SDL_DisplayMode * getCurrentDisplayMode()
+    {
+      static SDL_DisplayMode current;
+
+      const int should_be_zero = SDL_GetCurrentDisplayMode(0, &current);
+      if (should_be_zero)
+      {
+        throw std::runtime_error(sa2::decorateSDLError("SDL_GetCurrentDisplayMode"));
+      }
+      return &current;
+    }
+
+    void pauseAudioDevice(SDL_AudioDeviceID dev)
+    {
+      SDL_PauseAudioDevice(dev, 1);
+    }
+
+    void resumeAudioDevice(SDL_AudioDeviceID dev)
+    {
+      SDL_PauseAudioDevice(dev, 0);
+    }
+
+    void toggleCursor()
+    {
+      const int current = SDL_ShowCursor(SDL_QUERY);
+      SDL_ShowCursor(current ^ 1);
+    }
+
+    SDL_Window * createWindow(const char *title, const common2::Geometry & geometry, SDL_WindowFlags flags)
+    {
+      return SDL_CreateWindow(title, geometry.x, geometry.y, geometry.width, geometry.height, flags);
+    }
+
+    SDL_Renderer * createRenderer(SDL_Window * window, const int index)
+    {
+      return SDL_CreateRenderer(window, index, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    }
+
+#endif
+
+  }
+}

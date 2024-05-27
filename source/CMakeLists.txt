@@ -284,4 +284,4 @@ add_custom_command(
   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/bin/*.SYM ${CMAKE_BINARY_DIR}
   )
 
-configure_file(linux/config.h.in linux/config.h)
+configure_file(linux/linux_config.h.in linux/linux_config.h)
