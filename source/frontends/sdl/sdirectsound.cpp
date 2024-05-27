@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "frontends/sdl/sdirectsound.h"
+#include "frontends/sdl/sdlcompat.h"
 #include "frontends/sdl/utils.h"
 #include "frontends/common2/programoptions.h"
 
@@ -9,8 +10,6 @@
 #include "Core.h"
 #include "SoundCore.h"
 #include "Log.h"
-
-#include <SDL.h>
 
 #include <unordered_map>
 #include <memory>
@@ -53,13 +52,17 @@ namespace
     sa2::SoundInfo getInfo();
 
   private:
-    static void staticAudioCallback(void* userdata, uint8_t* stream, int len);
 
-    void audioCallback(uint8_t* stream, int len);
-
-    std::vector<uint8_t> myMixerBuffer;
-
+    void audioCallback2(uint8_t* stream, int len);
+    static void staticAudioCallback2(void* userdata, uint8_t* stream, int len);
     SDL_AudioDeviceID myAudioDevice;
+ 
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    static void staticAudioCallback3(void *userdata, SDL_AudioStream *stream, int additional_amount, int total_amount);
+    SDL_AudioStream * myAudioStream;
+#endif
+ 
+    std::vector<uint8_t> myMixerBuffer;
     SDL_AudioSpec myAudioSpec;
 
     size_t myBytesPerSecond;
@@ -69,13 +72,29 @@ namespace
 
   std::unordered_map<DirectSoundGenerator *, std::shared_ptr<DirectSoundGenerator> > activeSoundGenerators;
 
-  void DirectSoundGenerator::staticAudioCallback(void* userdata, uint8_t* stream, int len)
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+  void DirectSoundGenerator::staticAudioCallback3(void *userdata, SDL_AudioStream *stream, int additionalAmount, int totalAmount)
+  {
+    if (additionalAmount > 0)
+    {
+      Uint8 *data = SDL_stack_alloc(Uint8, additionalAmount);
+      if (data)
+      {
+        staticAudioCallback2(userdata, data, additionalAmount);
+        SDL_PutAudioStreamData(stream, data, additionalAmount);
+        SDL_stack_free(data);
+      }
+    }
+  }
+#endif
+
+  void DirectSoundGenerator::staticAudioCallback2(void* userdata, uint8_t* stream, int len)
   {
     DirectSoundGenerator * generator = static_cast<DirectSoundGenerator *>(userdata);
-    return generator->audioCallback(stream, len);
+    return generator->audioCallback2(stream, len);
   }
 
-  void DirectSoundGenerator::audioCallback(uint8_t* stream, int len)
+  void DirectSoundGenerator::audioCallback2(uint8_t* stream, int len)
   {
     LPVOID lpvAudioPtr1, lpvAudioPtr2;
     DWORD dwAudioBytes1, dwAudioBytes2;
@@ -100,27 +119,46 @@ namespace
     const size_t gap = len - bytesRead;
     if (gap)
     {
-      memset(stream, myAudioSpec.silence, gap);
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+      const auto silence = SDL_GetSilenceValueForFormat(myAudioSpec.format);
+#else
+      const auto & silence = myAudioSpec.silence;
+#endif
+      memset(stream, silence, gap);
     }
   }
 
   DirectSoundGenerator::DirectSoundGenerator(LPCDSBUFFERDESC lpcDSBufferDesc, const char * deviceName, const size_t ms)
     : IDirectSoundBuffer(lpcDSBufferDesc)
-    , myAudioDevice(0)
     , myBytesPerSecond(0)
   {
+    _ASSERT(ms > 0);
+
     SDL_zero(myAudioSpec);
 
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    myAudioSpec.freq = mySampleRate;
+    myAudioSpec.format = AUDIO_S16LSB;
+    myAudioSpec.channels = myChannels;
+    myAudioStream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_OUTPUT, &myAudioSpec, staticAudioCallback3, this);
+    if (myAudioStream)
+    {
+      myAudioDevice = SDL_GetAudioStreamDevice(myAudioStream);
+      myBytesPerSecond = getBytesPerSecond(myAudioSpec);
+    }
+    else
+    {
+      throw std::runtime_error(sa2::decorateSDLError("SDL_OpenAudioDeviceStream"));
+    }
+#else
     SDL_AudioSpec want;
     SDL_zero(want);
-
-    _ASSERT(ms > 0);
 
     want.freq = mySampleRate;
     want.format = AUDIO_S16LSB;
     want.channels = myChannels;
     want.samples = std::min<size_t>(MAX_SAMPLES, nextPowerOf2(mySampleRate * ms / 1000));
-    want.callback = staticAudioCallback;
+    want.callback = staticAudioCallback2;
     want.userdata = this;
     myAudioDevice = SDL_OpenAudioDevice(deviceName, 0, &want, &myAudioSpec, 0);
 
@@ -132,12 +170,16 @@ namespace
     {
       throw std::runtime_error(sa2::decorateSDLError("SDL_OpenAudioDevice"));
     }
+#endif
   }
 
   DirectSoundGenerator::~DirectSoundGenerator()
   {
-    SDL_PauseAudioDevice(myAudioDevice, 1);
+    sa2::compat::pauseAudioDevice(myAudioDevice);
     SDL_CloseAudioDevice(myAudioDevice);
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    SDL_DestroyAudioStream(myAudioStream);
+#endif
   }
 
   HRESULT DirectSoundGenerator::Release()
@@ -149,14 +191,14 @@ namespace
   HRESULT DirectSoundGenerator::Stop()
   {
     const HRESULT res = IDirectSoundBuffer::Stop();
-    SDL_PauseAudioDevice(myAudioDevice, 1);
+    sa2::compat::pauseAudioDevice(myAudioDevice);
     return res;
   }
   
   HRESULT DirectSoundGenerator::Play( DWORD dwReserved1, DWORD dwReserved2, DWORD dwFlags )
   {
     const HRESULT res = IDirectSoundBuffer::Play(dwReserved1, dwReserved2, dwFlags);
-    SDL_PauseAudioDevice(myAudioDevice, 0);
+    sa2::compat::resumeAudioDevice(myAudioDevice);
     return res;
   }
 
@@ -199,7 +241,12 @@ namespace
     const double logVolume = GetLogarithmicVolume();
     // same formula as QAudio::convertVolume()
     const double linVolume = logVolume > 0.99 ? 1.0 : -std::log(1.0 - logVolume) / std::log(100.0);
+
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    const float svolume = linVolume;
+#else
     const uint8_t svolume = uint8_t(linVolume * SDL_MIX_MAXVOLUME);
+#endif
 
     const size_t len = myMixerBuffer.size();
     memset(stream, 0, len);
