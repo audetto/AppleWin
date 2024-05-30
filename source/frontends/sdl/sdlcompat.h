@@ -16,7 +16,7 @@
 
   #define SA2_CONTROLLER_BUTTON(e) e.gbutton.button
   #define SA2_DROP_FILE(d) d.data
-  #define SA2_RENDERER_MODE , SDL_LOGICAL_PRESENTATION_STRETCH, SDL_SCALEMODE_NEAREST
+  #define SA2_RENDERER_LOGICAL_SIZE(r, w, h) SDL_RenderSetLogicalSize(r, w, h, SDL_LOGICAL_PRESENTATION_STRETCH, SDL_SCALEMODE_NEAREST)
   #define SA2_IMAGE_BITS(s) s->format->bits_per_pixel
 
   typedef SDL_FRect Renderer_Rect_t;
@@ -31,8 +31,7 @@
 
   #define SA2_CONTROLLER_BUTTON(e) e.cbutton.button
   #define SA2_DROP_FILE(d) d.file
-  #define SA2_RENDERER_MODE
-
+  #define SA2_RENDERER_LOGICAL_SIZE(r, w, h) SDL_RenderSetLogicalSize(r, w, h)
   #define SA2_IMAGE_BITS(s) s->format->BitsPerPixel
 
   typedef SDL_Rect Renderer_Rect_t;

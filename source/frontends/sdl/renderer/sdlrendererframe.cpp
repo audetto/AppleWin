@@ -45,7 +45,7 @@ namespace sa2
     const int sw = video.GetFrameBufferBorderlessWidth();
     const int sh = video.GetFrameBufferBorderlessHeight();
 
-    if (myPreserveAspectRatio && SDL_RenderSetLogicalSize(myRenderer.get(), sw, sh SA2_RENDERER_MODE))
+    if (myPreserveAspectRatio && SA2_RENDERER_LOGICAL_SIZE(myRenderer.get(), sw, sh))
     {
       throw std::runtime_error(decorateSDLError("SDL_RenderSetLogicalSize"));
     }
