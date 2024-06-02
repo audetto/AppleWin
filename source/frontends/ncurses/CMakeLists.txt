@@ -26,6 +26,7 @@ add_executable(applen
 set(CURSES_NEED_NCURSES TRUE)
 set(CURSES_NEED_WIDE TRUE)  # required for Unicode in GR and HGR
 find_package(Curses REQUIRED)
+find_package(Boost REQUIRED)
 
 pkg_search_module(LIBEVDEV REQUIRED libevdev)
 

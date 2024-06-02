@@ -242,6 +242,7 @@ else()
 endif()
 
 target_include_directories(appleii PRIVATE
+  ${MINIZIP_INCLUDE_DIRS}  # this MUST come first, to avoid potential ambiguities with libzip
   ${YAML_INCLUDE_DIRS}
   ${PCAP_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
@@ -252,7 +253,6 @@ target_include_directories(appleii PRIVATE
 # this one appears in header files
 target_include_directories(appleii PUBLIC
   ${CMAKE_CURRENT_BINARY_DIR}  # for config.h
-  ${MINIZIP_INCLUDE_DIRS}
   )
 
 target_link_libraries(appleii PRIVATE

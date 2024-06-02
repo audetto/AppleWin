@@ -1,0 +1,12 @@
+Packages to install.
+
+emacs
+cmake
+git
+mc
+minizip
+pkgconf
+libyaml-0.2.5
+boost-libs-1.84.0
+libevdev
+evdev-proto
