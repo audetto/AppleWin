@@ -25,7 +25,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "Card.h"
 #include "DiskImage.h"
-#include "DiskImageHelper.h"
 
 enum HardDrive_e
 {

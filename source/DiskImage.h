@@ -36,6 +36,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #endif
 
+	#define HD_BLOCK_SIZE 512
 
 	#define TRACK_DENIBBLIZED_SIZE (16 * 256)	// #Sectors x Sector-size
 

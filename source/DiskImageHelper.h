@@ -46,8 +46,6 @@ struct ImageInfo
 
 //-------------------------------------
 
-#define HD_BLOCK_SIZE 512
-
 #define UNIDISK35_800K_SIZE (800*1024)	// UniDisk 3.5"
 #define HARDDISK_32M_SIZE (HD_BLOCK_SIZE * 65536)
 
