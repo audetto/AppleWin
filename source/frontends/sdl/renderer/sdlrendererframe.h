@@ -24,7 +24,7 @@ namespace sa2
 
     static constexpr SDL_PixelFormatEnum ourPixelFormat = SDL_PIXELFORMAT_ARGB8888;
 
-    SDL_Rect myRect;
+    Renderer_Rect_t myRect;
     int myPitch;
 
     std::shared_ptr<SDL_Renderer> myRenderer;
