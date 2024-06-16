@@ -26,6 +26,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <netdb.h>
+#ifdef __FreeBSD__
+#include <sys/socket.h> // AF_INET.
+#endif
 #endif
 
 uint32_t getHostByName(const std::string & name)

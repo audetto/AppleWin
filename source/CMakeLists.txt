@@ -250,10 +250,22 @@ target_include_directories(appleii PRIVATE
   )
 
 # this one appears in header files
+if ("${CMAKE_SYSTEM_NAME}" STREQUAL "FreeBSD")
+# FreeBSD could already have "zip.h" (from libzip) in /usr/local/include
+# which takes precedence than the one in /usr/local/include/minizip.
+# "zip.h" from libzip is not what we want here.
+# The following changes to use include path /usr/local/include for minizip
+# so that the code can include "minizip/zip.h" explicitly.
+target_include_directories(appleii PUBLIC
+  ${CMAKE_CURRENT_BINARY_DIR}  # for config.h
+  ${MINIZIP_INCLUDE_DIRS}/..
+  )
+else()
 target_include_directories(appleii PUBLIC
   ${CMAKE_CURRENT_BINARY_DIR}  # for config.h
   ${MINIZIP_INCLUDE_DIRS}
   )
+endif()
 
 target_link_libraries(appleii PRIVATE
   ${YAML_LIBRARIES}
