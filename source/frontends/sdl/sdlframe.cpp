@@ -145,23 +145,27 @@ namespace sa2
 
   void SDLFrame::SetGLSynchronisation(const common2::EmulatorOptions & options)
   {
-    const int defaultGLSwap = compat::getGLSwapInterval();
-    if (defaultGLSwap == 0)
+    std::vector<int> intervalsToTry;
+
+    if (!options.syncWithTimer)
     {
-      // sane default
-      mySynchroniseWithTimer = true;
-      myTargetGLSwap = 0;
+      intervalsToTry.push_back(options.glSwapInterval);
+      intervalsToTry.push_back(std::abs(options.glSwapInterval));
+      intervalsToTry.push_back(-1);
+      intervalsToTry.push_back(1);
     }
-    else if (options.syncWithTimer)
+    // fallback
+    intervalsToTry.push_back(0);
+
+    const auto it = std::find_if(intervalsToTry.begin(), intervalsToTry.end(), setGLSwapInterval);
+
+    if (it == intervalsToTry.end())
     {
-      mySynchroniseWithTimer = true;
-      myTargetGLSwap = 0;
+      throw std::runtime_error(decorateSDLError("SDL_GL_SetSwapInterval"));
     }
-    else
-    {
-      mySynchroniseWithTimer = false;
-      myTargetGLSwap = options.glSwapInterval;
-    }
+
+    myTargetGLSwap = *it;
+    mySynchroniseWithTimer = (myTargetGLSwap == 0) && options.syncWithTimer;
   }
 
   void SDLFrame::End()
@@ -176,12 +180,19 @@ namespace sa2
     }
   }
 
-  void SDLFrame::setGLSwapInterval(const int interval)
+  bool SDLFrame::setGLSwapInterval(const int interval)
+  {
+    const int res = SDL_GL_SetSwapInterval(interval);
+    return res == 0;
+  }
+
+
+  void SDLFrame::changeGLSwapInterval(const int interval)
   {
     const int current = compat::getGLSwapInterval();
     // in QEMU with GL_RENDERER: llvmpipe (LLVM 12.0.0, 256 bits)
     // SDL_GL_SetSwapInterval() always fails
-    if (interval != current && SDL_GL_SetSwapInterval(interval))
+    if (interval != current && !setGLSwapInterval(interval))
     {
       throw std::runtime_error(decorateSDLError("SDL_GL_SetSwapInterval"));
     }

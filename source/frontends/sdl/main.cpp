@@ -73,7 +73,7 @@ void run_sdl(int argc, const char * argv [])
     frame = std::make_shared<sa2::SDLRendererFrame>(options);
   }
 
-  std::cerr << "Default GL swap interval: " << sa2::compat::getGLSwapInterval() << std::endl;
+  std::cerr << "GL swap interval: " << sa2::compat::getGLSwapInterval() << std::endl;
 
   const common2::CommonInitialisation init(frame, paddle, options);
 

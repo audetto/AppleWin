@@ -77,7 +77,17 @@ namespace sa2
       // I am not sure whether we should worry about SDL_PROP_RENDERER_CREATE_PRESENT_VSYNC_NUMBER
       const char * name = index >= 0 ? SDL_GetRenderDriver(index) : nullptr;
 
-      return SDL_CreateRenderer(window, name);
+      SDL_PropertiesID props = SDL_CreateProperties();
+      SDL_SetProperty(props, SDL_PROP_RENDERER_CREATE_WINDOW_POINTER, window);
+      SDL_SetBooleanProperty(props, SDL_PROP_RENDERER_CREATE_PRESENT_VSYNC_NUMBER, SDL_TRUE);
+      if (index >= 0)
+      {
+        SDL_SetStringProperty(props, SDL_PROP_RENDERER_CREATE_NAME_STRING, SDL_GetRenderDriver(index));
+      }
+
+      SDL_Renderer *renderer = SDL_CreateRendererWithProperties(props);
+      SDL_DestroyProperties(props);
+      return renderer;
     }
 
 #else

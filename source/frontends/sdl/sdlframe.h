@@ -40,7 +40,8 @@ namespace sa2
 
     void SaveSnapshot();
 
-    static void setGLSwapInterval(const int interval);
+    static bool setGLSwapInterval(const int interval);
+    static void changeGLSwapInterval(const int interval);
 
   protected:
     void SetApplicationIcon();
