@@ -34,7 +34,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "Common.h"
 
 #include "zlib.h"
+#ifdef __FreeBSD__
+#include "minizip/unzip.h"
+#else
 #include "unzip.h"
+#endif
 
 #include "CPU.h"
 #include "DiskImage.h"
