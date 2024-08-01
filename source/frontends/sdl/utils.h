@@ -1,6 +1,6 @@
 #pragma once
 
-#include <SDL.h>
+#include "frontends/sdl/sdlcompat.h"
 #include <memory>
 #include <iosfwd>
 #include <string>
