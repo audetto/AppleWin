@@ -73,7 +73,7 @@ namespace sa2
 
   void printRendererInfo(std::ostream & os,
                          const std::shared_ptr<SDL_Renderer> & ren,
-                         const SDL_PixelFormatEnum pixelFormat,
+                         const PixelFormat_t pixelFormat,
                          const int selectedDriver)
   {
     const size_t n = SDL_GetNumRenderDrivers();
@@ -154,15 +154,15 @@ namespace sa2
     // simplification of the handling of left and right version of the modifiers
     // so we can use equality == comparisons
     size_t modifiers = KMOD_NONE;
-    if (key.keysym.mod & KMOD_CTRL)
+    if (SA2_KEY_MOD(key) & KMOD_CTRL)
     {
       modifiers |= KMOD_CTRL;
     }
-    if (key.keysym.mod & KMOD_SHIFT)
+    if (SA2_KEY_MOD(key) & KMOD_SHIFT)
     {
       modifiers |= KMOD_SHIFT;
     }
-    if (key.keysym.mod & KMOD_ALT)
+    if (SA2_KEY_MOD(key) & KMOD_ALT)
     {
       modifiers |= KMOD_ALT;
     }

@@ -17,9 +17,12 @@
   #define SA2_CONTROLLER_BUTTON(e) e.gbutton.button
   #define SA2_DROP_FILE(d) d.data
   #define SA2_RENDERER_LOGICAL_SIZE(r, w, h) SDL_RenderSetLogicalSize(r, w, h, SDL_LOGICAL_PRESENTATION_STRETCH, SDL_SCALEMODE_NEAREST)
-  #define SA2_IMAGE_BITS(s) s->format->bits_per_pixel
+  #define SA2_IMAGE_BITS(s) SDL_GetPixelFormatDetails(s->format)->bits_per_pixel
+  #define SA2_KEY_CODE(e) e.key
+  #define SA2_KEY_MOD(e) e.mod
 
   typedef SDL_FRect Renderer_Rect_t;
+  typedef SDL_PixelFormat PixelFormat_t;
 #else
   #include <SDL.h>
   #include <SDL_opengl.h>
@@ -33,8 +36,11 @@
   #define SA2_DROP_FILE(d) d.file
   #define SA2_RENDERER_LOGICAL_SIZE(r, w, h) SDL_RenderSetLogicalSize(r, w, h)
   #define SA2_IMAGE_BITS(s) s->format->BitsPerPixel
+  #define SA2_KEY_CODE(e) e.keysym.sym
+  #define SA2_KEY_MOD(e) e.keysym.mod
 
   typedef SDL_Rect Renderer_Rect_t;
+  typedef SDL_PixelFormatEnum PixelFormat_t;
 #endif
 
 namespace common2

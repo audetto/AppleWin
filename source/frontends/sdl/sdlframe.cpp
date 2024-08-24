@@ -46,7 +46,7 @@ namespace
     // but this makes it impossible to detect CTRL-ASCII... more to follow
     BYTE ch = 0;
 
-    switch (key.keysym.sym)
+    switch (SA2_KEY_CODE(key))
     {
     case SDLK_RETURN:
     case SDLK_KP_ENTER:
@@ -96,10 +96,10 @@ namespace
         // CAPS is forced when the emulator starts
         // until is used the first time
         const bool capsLock = forceCapsLock || (SDL_GetModState() & KMOD_CAPS);
-        const bool upper = capsLock || (key.keysym.mod & KMOD_SHIFT);
+        const bool upper = capsLock || (SA2_KEY_MOD(key) & KMOD_SHIFT);
 
-        ch = (key.keysym.sym - SDLK_a) + 0x01;
-        if (key.keysym.mod & KMOD_CTRL)
+        ch = (SA2_KEY_CODE(key) - SDLK_a) + 0x01;
+        if (SA2_KEY_MOD(key) & KMOD_CTRL)
         {
           // ok
         }
@@ -455,7 +455,7 @@ namespace sa2
     if (!key.repeat)
     {
       const size_t modifiers = getCanonicalModifiers(key);
-      switch (key.keysym.sym)
+      switch (SA2_KEY_CODE(key))
       {
       case SDLK_F12:
         {
@@ -581,12 +581,20 @@ namespace sa2
           }
           else if (modifiers ==  KMOD_SHIFT)
           {
+#ifdef SA2_SDL3
+            const char * text = SDL_GetClipboardText();
+            if (text)
+            {
+              addTextToBuffer(text);
+            }
+#else
             char * text = SDL_GetClipboardText();
             if (text)
             {
               addTextToBuffer(text);
               SDL_free(text);
             }
+#endif
           }
           else if (modifiers == KMOD_CTRL)
           {
@@ -614,7 +622,7 @@ namespace sa2
 
   void SDLFrame::ProcessKeyUp(const SDL_KeyboardEvent & key)
   {
-    switch (key.keysym.sym)
+    switch (SA2_KEY_CODE(key))
     {
     case SDLK_LALT:
       {

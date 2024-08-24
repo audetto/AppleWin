@@ -22,7 +22,7 @@ namespace sa2
 
   private:
 
-    static constexpr SDL_PixelFormatEnum ourPixelFormat = SDL_PIXELFORMAT_ARGB8888;
+    static constexpr PixelFormat_t ourPixelFormat = SDL_PIXELFORMAT_ARGB8888;
 
     Renderer_Rect_t myRect;
     int myPitch;

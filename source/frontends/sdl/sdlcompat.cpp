@@ -13,12 +13,11 @@ namespace sa2
     int getNumJoysticks()
     {
       int count = 0;
-      SDL_JoystickID* joy = SDL_GetJoysticks(&count);
+      const SDL_JoystickID* joy = SDL_GetJoysticks(&count);
       if (!joy)
       {
         throw std::runtime_error(decorateSDLError("SDL_GetJoysticks"));
       }
-      SDL_free(joy);
       return count;
     }
 
@@ -35,11 +34,10 @@ namespace sa2
     const SDL_DisplayMode * getCurrentDisplayMode()
     {
       int count = 0;
-      SDL_DisplayID * displays = SDL_GetDisplays(&count);
+      const SDL_DisplayID * displays = SDL_GetDisplays(&count);
       if (displays)
       {
         const SDL_DisplayMode * mode = SDL_GetCurrentDisplayMode(*displays);
-        SDL_free(displays);
         return mode;
       }
       throw std::runtime_error(decorateSDLError("SDL_GetDisplays"));
@@ -78,7 +76,7 @@ namespace sa2
       const char * name = index >= 0 ? SDL_GetRenderDriver(index) : nullptr;
 
       SDL_PropertiesID props = SDL_CreateProperties();
-      SDL_SetProperty(props, SDL_PROP_RENDERER_CREATE_WINDOW_POINTER, window);
+      SDL_SetPointerProperty(props, SDL_PROP_RENDERER_CREATE_WINDOW_POINTER, window);
       SDL_SetBooleanProperty(props, SDL_PROP_RENDERER_CREATE_PRESENT_VSYNC_NUMBER, SDL_TRUE);
       if (index >= 0)
       {

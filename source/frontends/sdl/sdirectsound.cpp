@@ -140,7 +140,7 @@ namespace
     myAudioSpec.freq = mySampleRate;
     myAudioSpec.format = AUDIO_S16LSB;
     myAudioSpec.channels = myChannels;
-    myAudioStream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_OUTPUT, &myAudioSpec, staticAudioCallback3, this);
+    myAudioStream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &myAudioSpec, staticAudioCallback3, this);
     if (myAudioStream)
     {
       myAudioDevice = SDL_GetAudioStreamDevice(myAudioStream);

@@ -293,7 +293,7 @@ namespace sa2
     {
       const size_t modifiers = getCanonicalModifiers(key);
 
-      switch (key.keysym.sym)
+      switch (SA2_KEY_CODE(key))
       {
       case SDLK_F8:
         {
