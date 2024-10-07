@@ -55,7 +55,7 @@ if ("${ROOT_PATH}" STREQUAL "")
 endif()
 file(RELATIVE_PATH SHARE_PATH ${CMAKE_INSTALL_FULL_BINDIR} ${CMAKE_INSTALL_FULL_DATADIR}/applewin)
 
-configure_file(config.h.in config.h)
+configure_file(common_config.h.in common_config.h)
 
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/resource
   DESTINATION ${CMAKE_INSTALL_DATADIR}/applewin)

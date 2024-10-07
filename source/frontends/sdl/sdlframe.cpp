@@ -3,6 +3,7 @@
 #include "frontends/sdl/sdlframe.h"
 #include "frontends/sdl/utils.h"
 #include "frontends/sdl/sdirectsound.h"
+#include "frontends/sdl/sdlcompat.h"
 #include "frontends/common2/programoptions.h"
 #include "frontends/common2/utils.h"
 
@@ -21,7 +22,11 @@
 
 #include <algorithm>
 
-#include <SDL_image.h>
+#ifdef SA2_SDL3
+  #include <SDL3_image/SDL_image.h>
+#else
+  #include <SDL_image.h>
+#endif
 
 // #define KEY_LOGGING_VERBOSE
 
@@ -41,7 +46,7 @@ namespace
     // but this makes it impossible to detect CTRL-ASCII... more to follow
     BYTE ch = 0;
 
-    switch (key.keysym.sym)
+    switch (SA2_KEY_CODE(key))
     {
     case SDLK_RETURN:
     case SDLK_KP_ENTER:
@@ -91,10 +96,10 @@ namespace
         // CAPS is forced when the emulator starts
         // until is used the first time
         const bool capsLock = forceCapsLock || (SDL_GetModState() & KMOD_CAPS);
-        const bool upper = capsLock || (key.keysym.mod & KMOD_SHIFT);
+        const bool upper = capsLock || (SA2_KEY_MOD(key) & KMOD_SHIFT);
 
-        ch = (key.keysym.sym - SDLK_a) + 0x01;
-        if (key.keysym.mod & KMOD_CTRL)
+        ch = (SA2_KEY_CODE(key) - SDLK_a) + 0x01;
+        if (SA2_KEY_MOD(key) & KMOD_CTRL)
         {
           // ok
         }
@@ -140,23 +145,27 @@ namespace sa2
 
   void SDLFrame::SetGLSynchronisation(const common2::EmulatorOptions & options)
   {
-    const int defaultGLSwap = SDL_GL_GetSwapInterval();
-    if (defaultGLSwap == 0)
+    std::vector<int> intervalsToTry;
+
+    if (!options.syncWithTimer)
     {
-      // sane default
-      mySynchroniseWithTimer = true;
-      myTargetGLSwap = 0;
+      intervalsToTry.push_back(options.glSwapInterval);
+      intervalsToTry.push_back(std::abs(options.glSwapInterval));
+      intervalsToTry.push_back(-1);
+      intervalsToTry.push_back(1);
     }
-    else if (options.syncWithTimer)
+    // fallback
+    intervalsToTry.push_back(0);
+
+    const auto it = std::find_if(intervalsToTry.begin(), intervalsToTry.end(), setGLSwapInterval);
+
+    if (it == intervalsToTry.end())
     {
-      mySynchroniseWithTimer = true;
-      myTargetGLSwap = 0;
+      throw std::runtime_error(decorateSDLError("SDL_GL_SetSwapInterval"));
     }
-    else
-    {
-      mySynchroniseWithTimer = false;
-      myTargetGLSwap = options.glSwapInterval;
-    }
+
+    myTargetGLSwap = *it;
+    mySynchroniseWithTimer = (myTargetGLSwap == 0) && options.syncWithTimer;
   }
 
   void SDLFrame::End()
@@ -171,12 +180,19 @@ namespace sa2
     }
   }
 
-  void SDLFrame::setGLSwapInterval(const int interval)
+  bool SDLFrame::setGLSwapInterval(const int interval)
   {
-    const int current = SDL_GL_GetSwapInterval();
+    const int res = SDL_GL_SetSwapInterval(interval);
+    return res == 0;
+  }
+
+
+  void SDLFrame::changeGLSwapInterval(const int interval)
+  {
+    const int current = compat::getGLSwapInterval();
     // in QEMU with GL_RENDERER: llvmpipe (LLVM 12.0.0, 256 bits)
     // SDL_GL_SetSwapInterval() always fails
-    if (interval != current && SDL_GL_SetSwapInterval(interval))
+    if (interval != current && !setGLSwapInterval(interval))
     {
       throw std::runtime_error(decorateSDLError("SDL_GL_SetSwapInterval"));
     }
@@ -220,7 +236,7 @@ namespace sa2
     std::shared_ptr<SDL_Surface> surface(SDL_LoadBMP(path.c_str()), SDL_FreeSurface);
     if (surface)
     {
-      SDL_LockSurface(surface.get());
+      int res = SDL_LockSurface(surface.get());
 
       const char * source = static_cast<char *>(surface->pixels);
       const size_t size = surface->h * surface->w / 8;
@@ -230,16 +246,28 @@ namespace sa2
 
       char * dest = static_cast<char *>(lpvBits);
 
-      for (size_t i = 0; i < copied; ++i)
+      switch (SA2_IMAGE_BITS(surface))
       {
-        const size_t offset = i * 8;
-        char val = 0;
-        for (size_t j = 0; j < 8; ++j)
+      case 1:
+      {
+        memcpy(dest, source, copied);
+        break;
+      }
+      case 8:
+      {
+        for (size_t i = 0; i < copied; ++i)
         {
-          const char pixel = *(source + offset + j);
-          val = (val << 1) | pixel;
+          const size_t offset = i * 8;
+          char val = 0;
+          for (size_t j = 0; j < 8; ++j)
+          {
+            const char pixel = *(source + offset + j);
+            val = (val << 1) | pixel;
+          }
+          dest[i] = val;
         }
-        dest[i] = val;
+        break;
+      }
       }
 
       SDL_UnlockSurface(surface.get());
@@ -307,12 +335,14 @@ namespace sa2
     case SDL_DROPFILE:
       {
         ProcessDropEvent(e.drop);
+#if !SDL_VERSION_ATLEAST(3, 0, 0)
         SDL_free(e.drop.file);
+#endif
         break;
       }
     case SDL_CONTROLLERBUTTONDOWN:
       {
-        if (e.cbutton.button == SDL_CONTROLLER_BUTTON_BACK)  // SELECT
+        if (SA2_CONTROLLER_BUTTON(e) == SDL_CONTROLLER_BUTTON_BACK)  // SELECT
         {
           quit = myControllerQuit.pressButton();
         }
@@ -413,7 +443,7 @@ namespace sa2
 
   void SDLFrame::ProcessDropEvent(const SDL_DropEvent & drop)
   {
-    processFile(this, drop.file, myDragAndDropSlot, myDragAndDropDrive);
+    processFile(this, SA2_DROP_FILE(drop), myDragAndDropSlot, myDragAndDropDrive);
   }
 
   void SDLFrame::ProcessKeyDown(const SDL_KeyboardEvent & key, bool &quit)
@@ -425,7 +455,7 @@ namespace sa2
     if (!key.repeat)
     {
       const size_t modifiers = getCanonicalModifiers(key);
-      switch (key.keysym.sym)
+      switch (SA2_KEY_CODE(key))
       {
       case SDLK_F12:
         {
@@ -472,7 +502,7 @@ namespace sa2
           else if (modifiers == KMOD_NONE)
           {
             myFullscreen = !myFullscreen;
-            SDL_SetWindowFullscreen(myWindow.get(), myFullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
+            SDL_SetWindowFullscreen(myWindow.get(), myFullscreen ? SDL_TRUE : SDL_FALSE);
           }
           break;
         }
@@ -551,12 +581,20 @@ namespace sa2
           }
           else if (modifiers ==  KMOD_SHIFT)
           {
+#ifdef SA2_SDL3
+            const char * text = SDL_GetClipboardText();
+            if (text)
+            {
+              addTextToBuffer(text);
+            }
+#else
             char * text = SDL_GetClipboardText();
             if (text)
             {
               addTextToBuffer(text);
               SDL_free(text);
             }
+#endif
           }
           else if (modifiers == KMOD_CTRL)
           {
@@ -584,7 +622,7 @@ namespace sa2
 
   void SDLFrame::ProcessKeyUp(const SDL_KeyboardEvent & key)
   {
-    switch (key.keysym.sym)
+    switch (SA2_KEY_CODE(key))
     {
     case SDLK_LALT:
       {
