@@ -8,6 +8,9 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#ifdef __FreeBSD__
+#include <netinet/in.h> // sockaddr_in.
+#endif
 
 namespace
 {
