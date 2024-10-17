@@ -2,7 +2,11 @@
 
 #include "DiskDefs.h"
 #include "DiskImage.h"
+#ifdef __FreeBSD__
+#include "minizip/zip.h"
+#else
 #include "zip.h"
+#endif
 
 #define GZ_SUFFIX ".gz"
 #define GZ_SUFFIX_LEN (sizeof(GZ_SUFFIX)-1)

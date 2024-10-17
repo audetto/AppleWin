@@ -75,6 +75,9 @@ typedef int socklen_t;
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
+#ifdef __FreeBSD__
+#include <netinet/in.h> // sockaddr_in.
+#endif
 
 #endif
 
