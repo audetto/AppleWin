@@ -5,6 +5,7 @@
 
 namespace common2
 {
+  struct EmulatorOptions;
 
   class GNUFrame : public CommonFrame
   {
@@ -12,11 +13,16 @@ namespace common2
     GNUFrame(const common2::EmulatorOptions & option);
 
     std::string Video_GetScreenShotFolder() const override;
-    std::string getResourcePath(const std::string & filename) override;
+    BYTE* GetResource(WORD id, LPCSTR lpType, DWORD expectedSize) override;
+    
+  protected:
+    virtual std::string getResourcePath(const std::string& filename);
 
   private:
     const std::string myHomeDir;
     const std::string myResourceFolder;
+
+    std::vector<BYTE> myResource;
   };
 
 }

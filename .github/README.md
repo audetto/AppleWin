@@ -132,6 +132,15 @@ You can use `sudo apt-get -y install $(cat AppleWin/source/linux/raspbian.list.t
 
 See [Travis](/.travis.yml) CI too.
 
+### Windows (libretro core only)
+
+Build using msys2, using the standard build instructions below.
+
+Install the following packages (for x64 build):
+```
+pacman -S mingw-w64-x86_64-cmake mingw-w64-x86_64-libyaml mingw-w64-x86_64-minizip mingw-w64-x86_64-libslirp
+```
+
 ### Building
 
 ```

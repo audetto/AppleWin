@@ -8,6 +8,10 @@
 #include <fstream>
 #include <unistd.h>
 
+#ifdef _WIN32
+#include <fileapi.h>
+#endif
+
 namespace
 {
   class AutoFile
@@ -25,6 +29,24 @@ namespace
 
   AutoFile::AutoFile()
   {
+#ifdef _WIN32
+    CHAR szTempFileName[MAX_PATH];
+    CHAR lpTempPathBuffer[MAX_PATH];
+
+    DWORD dwRetVal = GetTempPathA(MAX_PATH, lpTempPathBuffer);
+    if (dwRetVal > MAX_PATH || (dwRetVal == 0))
+    {
+      throw std::runtime_error("Cannot create temporary file");
+    }
+
+    UINT uRetVal = GetTempFileNameA(lpTempPathBuffer, "aws", 1, szTempFileName);
+    if (uRetVal == 0)
+    {
+      throw std::runtime_error("Cannot create temporary file");
+    }
+
+    myFilename = szTempFileName;
+#else
     char pattern[] = "/tmp/awXXXXXX.aws.yaml";
     myFD = mkstemps(pattern, 9);
     if (myFD <= 0)
@@ -32,6 +54,7 @@ namespace
       throw std::runtime_error("Cannot create temporary file");
     }
     myFilename = pattern;
+#endif
   }
 
   AutoFile::~AutoFile()

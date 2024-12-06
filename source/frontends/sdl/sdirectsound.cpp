@@ -4,7 +4,6 @@
 #include "frontends/common2/programoptions.h"
 
 #include "windows.h"
-#include "linux/linuxinterface.h"
 
 #include "Core.h"
 #include "SoundCore.h"
@@ -39,11 +38,12 @@ namespace
     return k;
   }
 
-  class DirectSoundGenerator : public IDirectSoundBuffer
+  class DirectSoundGenerator : public SoundBuffer
   {
   public:
-    DirectSoundGenerator(LPCDSBUFFERDESC lpcDSBufferDesc, const char * deviceName, const size_t ms);
-    virtual ~DirectSoundGenerator() override;
+    DirectSoundGenerator();
+    virtual ~DirectSoundGenerator();
+    virtual HRESULT Init(DWORD dwFlags, DWORD dwBufferSize, DWORD nSampleRate, int nChannels, LPCSTR pDevName) override;
     virtual HRESULT Release() override;
 
     virtual HRESULT Stop() override;
@@ -63,6 +63,7 @@ namespace
     SDL_AudioSpec myAudioSpec;
 
     size_t myBytesPerSecond;
+    std::string myName;
 
     uint8_t * mixBufferTo(uint8_t * stream);
   };
@@ -104,34 +105,41 @@ namespace
     }
   }
 
-  DirectSoundGenerator::DirectSoundGenerator(LPCDSBUFFERDESC lpcDSBufferDesc, const char * deviceName, const size_t ms)
-    : IDirectSoundBuffer(lpcDSBufferDesc)
+  DirectSoundGenerator::DirectSoundGenerator()
+    : SoundBuffer()
     , myAudioDevice(0)
     , myBytesPerSecond(0)
+  {
+  }
+
+  HRESULT DirectSoundGenerator::Init(DWORD dwFlags, DWORD dwBufferSize, DWORD nSampleRate, int nChannels, LPCSTR pDevName)
   {
     SDL_zero(myAudioSpec);
 
     SDL_AudioSpec want;
     SDL_zero(want);
 
-    _ASSERT(ms > 0);
+    _ASSERT(audioBuffer > 0);
 
-    want.freq = mySampleRate;
+    want.freq = nSampleRate;
     want.format = AUDIO_S16LSB;
-    want.channels = myChannels;
-    want.samples = std::min<size_t>(MAX_SAMPLES, nextPowerOf2(mySampleRate * ms / 1000));
+    want.channels = nChannels;
+    want.samples = std::min<size_t>(MAX_SAMPLES, nextPowerOf2(nSampleRate * audioBuffer / 1000));
     want.callback = staticAudioCallback;
     want.userdata = this;
+
+    const char * deviceName = audioDeviceName.empty() ? nullptr : audioDeviceName.c_str();
     myAudioDevice = SDL_OpenAudioDevice(deviceName, 0, &want, &myAudioSpec, 0);
 
     if (myAudioDevice)
     {
+      myName = pDevName;
       myBytesPerSecond = getBytesPerSecond(myAudioSpec);
+      return SoundBuffer::Init(dwFlags, dwBufferSize, nSampleRate, nChannels, pDevName);
     }
-    else
-    {
-      throw std::runtime_error(sa2::decorateSDLError("SDL_OpenAudioDevice"));
-    }
+
+    LogOutput("DirectSoundGenerator: %s\n", sa2::decorateSDLError("SDL_OpenAudioDevice").c_str());
+    return E_FAIL;
   }
 
   DirectSoundGenerator::~DirectSoundGenerator()
@@ -143,19 +151,19 @@ namespace
   HRESULT DirectSoundGenerator::Release()
   {
     activeSoundGenerators.erase(this);  // this will force the destructor
-    return IUnknown::Release();
+    return DS_OK;
   }
 
   HRESULT DirectSoundGenerator::Stop()
   {
-    const HRESULT res = IDirectSoundBuffer::Stop();
+    const HRESULT res = SoundBuffer::Stop();
     SDL_PauseAudioDevice(myAudioDevice, 1);
     return res;
   }
   
   HRESULT DirectSoundGenerator::Play( DWORD dwReserved1, DWORD dwReserved2, DWORD dwFlags )
   {
-    const HRESULT res = IDirectSoundBuffer::Play(dwReserved1, dwReserved2, dwFlags);
+    const HRESULT res = SoundBuffer::Play(dwReserved1, dwReserved2, dwFlags);
     SDL_PauseAudioDevice(myAudioDevice, 0);
     return res;
   }
@@ -209,25 +217,35 @@ namespace
 
 }
 
-IDirectSoundBuffer * iCreateDirectSoundBuffer(LPCDSBUFFERDESC lpcDSBufferDesc)
+static SoundBufferBase* CreateSoundBuffer(void)
 {
   try
   {
-    const char * deviceName = audioDeviceName.empty() ? nullptr : audioDeviceName.c_str();
-
-    std::shared_ptr<DirectSoundGenerator> generator = std::make_shared<DirectSoundGenerator>(lpcDSBufferDesc, deviceName, audioBuffer);
-    DirectSoundGenerator * ptr = generator.get();
-    activeSoundGenerators[ptr] = generator;
-    return ptr;
+    DirectSoundGenerator * generator = new DirectSoundGenerator();
+    activeSoundGenerators[generator].reset(generator);
+    return generator;
   }
   catch (const std::exception & e)
   {
-    // once this fails, no point in trying again next time
     g_bDisableDirectSound = true;
     g_bDisableDirectSoundMockingboard = true;
-    LogOutput("IDirectSoundBuffer: %s\n", e.what());
+    LogOutput("SoundBuffer: %s\n", e.what());
     return nullptr;
   }
+}
+
+extern bool g_bDSAvailable;
+
+bool DSInit()
+{
+  SoundBufferBase::Create = CreateSoundBuffer;
+  g_bDSAvailable = true;
+  return true;
+}
+
+void DSUninit()
+{
+
 }
 
 namespace sa2

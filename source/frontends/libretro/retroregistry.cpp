@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 #include "frontends/libretro/retroregistry.h"
-#include "frontends/common2/ptreeregistry.h"
 #include "frontends/libretro/environment.h"
+#include "linux/registryclass.h"
 
 #include "Common.h"
 #include "Card.h"
@@ -173,6 +173,53 @@ namespace
 
 namespace ra2
 {
+  class RetroRegistry : public Registry
+  {
+  public:
+      std::string getString(const std::string& section, const std::string& key) const override
+      {
+          const auto iter = myValues.find(section);
+          if (iter == myValues.end())
+              throw std::runtime_error("section not found");
+
+          const auto iter2 = iter->second.find(key);
+          if (iter2 == iter->second.end())
+              throw std::runtime_error("key not found");
+
+          return iter2->second;
+      }
+
+      DWORD getDWord(const std::string& section, const std::string& key) const override
+      {
+          const std::string value = getString(section, key);
+          return atoi(value.c_str());
+      }
+
+      bool getBool(const std::string& section, const std::string& key) const
+      {
+          const std::string value = getString(section, key);
+          return (value == "true" || atoi(value.c_str()) != 0);
+      }
+
+      void putString(const std::string& section, const std::string& key, const std::string& value)
+      {
+          myValues[section][key] = value;
+      }
+
+      void putDWord(const std::string& section, const std::string& key, const DWORD value)
+      {
+          putString(section, key, std::to_string(value));
+      }
+
+      std::map<std::string, std::map<std::string, std::string>> getAllValues() const
+      {
+          return myValues;
+      }
+
+  private:
+      std::map<std::string, std::map<std::string, std::string>> myValues;
+  };
+
 
   void SetupRetroVariables()
   {
@@ -223,9 +270,10 @@ namespace ra2
     }
   }
 
-  std::shared_ptr<common2::PTreeRegistry> CreateRetroRegistry()
+  std::shared_ptr<Registry> CreateRetroRegistry()
   {
-    const auto registry = std::make_shared<common2::PTreeRegistry>();
+    std::shared_ptr<Registry> registry;
+    registry.reset(new RetroRegistry());
     PopulateRegistry(registry);
     return registry;
   }

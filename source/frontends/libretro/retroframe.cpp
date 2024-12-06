@@ -78,18 +78,13 @@ namespace
 namespace ra2
 {
 
-  RetroFrame::RetroFrame(const common2::EmulatorOptions & options)
-  : common2::GNUFrame(options)
+  RetroFrame::RetroFrame()
+  : common2::CommonFrame(true, true, false, true)
   {
   }
 
   void RetroFrame::FrameRefreshStatus(int drawflags)
   {
-    if (drawflags & DRAW_TITLE)
-    {
-      GetAppleWindowTitle();
-      display_message(g_pAppTitle.c_str());
-    }
   }
 
   void RetroFrame::VideoPresentScreen()
@@ -138,43 +133,9 @@ namespace ra2
     myVideoBuffer.clear();
   }
 
-  void RetroFrame::GetBitmap(LPCSTR lpBitmapName, LONG cb, LPVOID lpvBits)
-  {
-    const std::string filename = getBitmapFilename(lpBitmapName);
-    const std::string path = getResourcePath(filename);
-
-    std::vector<char> buffer;
-    readFileToBuffer(path, buffer);
-
-    if (!buffer.empty())
-    {
-      int32_t width, height;
-      uint16_t bpp;
-      const char * data;
-      uint32_t size;
-      const bool res = getBitmapData(buffer, width, height, bpp, data, size);
-
-      if (res && height > 0 && size <= cb)
-      {
-        const size_t length = size / height;
-        // rows are stored upside down
-        char * out = static_cast<char *>(lpvBits);
-        for (size_t row = 0; row < height; ++row)
-        {
-          const char * src = data + row * length;
-          char * dst = out + (height - row - 1) * length;
-          memcpy(dst, src, length);
-        }
-        return;
-      }
-    }
-
-    log_cb(RETRO_LOG_INFO, "RA2: %s. Missing bitmap '%s'\n", __FUNCTION__, lpBitmapName);
-    CommonFrame::GetBitmap(lpBitmapName, cb, lpvBits);
-  }
-
   int RetroFrame::FrameMessageBox(LPCSTR lpText, LPCSTR lpCaption, UINT uType)
   {
+    display_message(lpText, 60);
     log_cb(RETRO_LOG_INFO, "RA2: %s: %s - %s\n", __FUNCTION__, lpCaption, lpText);
     return IDOK;
   }
@@ -193,7 +154,7 @@ namespace ra2
   void RetroFrame::Begin()
   {
     const common2::RestoreCurrentDirectory restoreChDir;
-    common2::GNUFrame::Begin();
+    common2::CommonFrame::Begin();
   }
 
 

@@ -1,3 +1,5 @@
+#include "StdAfx.h"
+
 #include "frontends/common2/ptreeregistry.h"
 
 #include <boost/algorithm/string/replace.hpp>

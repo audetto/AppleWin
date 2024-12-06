@@ -44,7 +44,9 @@ typedef uint16_t UINT16;
 //
 // we stick to VS's definition
 // this is important when selecting the correct printf format specifier
+#ifndef __int64
 #define __int64 long long int
+#endif
 
 typedef intptr_t INT_PTR;
 typedef uintptr_t UINT_PTR;
@@ -190,7 +192,9 @@ typedef unsigned char TBYTE , *PTBYTE ;
 #define TEXT(quote) __TEXT(quote)   // r_winnt
 
 #define WINAPI
+#ifndef __stdcall
 #define __stdcall
+#endif
 #define CALLBACK
 
 #ifdef _DEBUG
@@ -200,7 +204,9 @@ typedef unsigned char TBYTE , *PTBYTE ;
 #endif
 
 #define __interface struct
+#ifndef __forceinline
 #define __forceinline inline
+#endif
 
 #define _tmain main
 

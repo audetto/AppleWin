@@ -1,4 +1,4 @@
-set(SOURCE_FILES
+set(SOURCE_FILES ${SOURCE_FILES}
   dmusicc.cpp
   dsound.cpp
   fileapi.cpp
@@ -13,7 +13,7 @@ set(SOURCE_FILES
   winuser.cpp
   )
 
-set(HEADER_FILES
+set(HEADER_FILES ${HEADER_FILES}
   dmusicc.h
   dsound.h
   fileapi.h
@@ -43,4 +43,9 @@ add_library(windows STATIC
 
 target_include_directories(windows PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}
+  )
+
+# dsound.cpp depends on soundbuffer.cpp
+target_link_libraries(windows PRIVATE
+  appleii
   )

@@ -4,8 +4,6 @@
 #include "frontends/libretro/retroframe.h"
 #include "frontends/libretro/rkeyboard.h"
 #include "frontends/common2/utils.h"
-#include "frontends/common2/ptreeregistry.h"
-#include "frontends/common2/programoptions.h"
 
 #include "Common.h"
 #include "Interface.h"
@@ -13,28 +11,9 @@
 #include "linux/keyboardbuffer.h"
 #include "linux/paddle.h"
 #include "linux/context.h"
+#include "linux/registryclass.h"
 
 #include "libretro.h"
-
-#define APPLEWIN_RETRO_CONF "/tmp/applewin.retro.conf"
-
-namespace
-{
-
-  void saveRegistryToINI(const std::shared_ptr<common2::PTreeRegistry> & registry)
-  {
-    try
-    {
-      registry->saveToINIFile(APPLEWIN_RETRO_CONF);
-      ra2::display_message("Configuration saved to: " APPLEWIN_RETRO_CONF);
-    }
-    catch (const std::exception & e)
-    {
-      ra2::display_message(std::string("Error saving configuration: ") + e.what());
-    }
-  }
-
-}
 
 namespace ra2
 {
@@ -47,13 +26,11 @@ namespace ra2
     , myAudioSource(AudioSource::UNKNOWN)
     , myKeyboardType(KeyboardType::ASCII)
   {
-    myLoggerContext = std::make_shared<LoggerContext>(true);
+    myLoggerContext = std::make_shared<LoggerContext>(false);
     myRegistry = CreateRetroRegistry();
     myRegistryContext = std::make_shared<RegistryContext>(myRegistry);
 
-    common2::EmulatorOptions defaultOptions;
-    defaultOptions.fixedSpeed = true;
-    myFrame = std::make_shared<ra2::RetroFrame>(defaultOptions);
+    myFrame = std::make_shared<ra2::RetroFrame>();
 
     refreshVariables();
 
@@ -289,10 +266,6 @@ namespace ra2
       if (checkButton(RETRO_DEVICE_ID_JOYPAD_L))
       {
         myFrame->Cycle50ScanLines();
-      }
-      if (checkButton(RETRO_DEVICE_ID_JOYPAD_L2))
-      {
-        saveRegistryToINI(myRegistry);
       }
       if (checkButton(RETRO_DEVICE_ID_JOYPAD_R2))
       {

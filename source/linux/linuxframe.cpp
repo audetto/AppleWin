@@ -1,7 +1,9 @@
 #include "StdAfx.h"
 #include "linux/linuxframe.h"
 #include "linux/context.h"
+#ifndef _WIN32
 #include "linux/network/slirp2.h"
+#endif
 #include "linux/version.h"
 #include "Interface.h"
 #include "Log.h"
@@ -66,7 +68,7 @@ LinuxFrame::LinuxFrame(const bool autoBoot) : myAutoBoot(autoBoot)
 {
   const std::array<int, 4> version = getVersionNumbers();
   SetAppleWinVersion(version[0], version[1], version[2], version[3]);
-  g_hFrameWindow = this;
+  g_hFrameWindow = (HWND)this;
 }
 
 void LinuxFrame::Initialize(bool resetVideoState)
@@ -153,14 +155,20 @@ void LinuxFrame::LoadSnapshot()
 
 std::shared_ptr<NetworkBackend> LinuxFrame::CreateNetworkBackend(const std::string & interfaceName)
 {
-#ifdef U2_USE_SLIRP
+#ifndef _WIN32
+ #ifdef U2_USE_SLIRP
   return std::make_shared<SlirpBackend>();
-#else
+ #else
   return std::make_shared<PCapBackend>(interfaceName);
+ #endif
+#else
+	return std::shared_ptr<NetworkBackend>();
 #endif
 }
 
+#ifndef _WIN32
 int MessageBox(HWND, LPCSTR lpText, LPCSTR lpCaption, UINT uType)
 {
   return GetFrame().FrameMessageBox(lpText, lpCaption, uType);
 }
+#endif

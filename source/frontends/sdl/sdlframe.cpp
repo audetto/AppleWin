@@ -212,6 +212,15 @@ namespace sa2
     return myWindow;
   }
 
+  static std::string getBitmapFilename(const std::string & resource)
+  {
+    if (resource == "CHARSET82") return "CHARSET82.bmp";
+    if (resource == "CHARSET8M") return "CHARSET8M.bmp";
+    if (resource == "CHARSET8C") return "CHARSET8C.bmp";
+
+    return resource;
+  }
+
   void SDLFrame::GetBitmap(LPCSTR lpBitmapName, LONG cb, LPVOID lpvBits)
   {
     const std::string filename = getBitmapFilename(lpBitmapName);

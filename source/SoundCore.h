@@ -4,9 +4,11 @@
 
 #define SAFE_RELEASE(p)      { if(p) { (p)->Release(); (p)=NULL; } }
 
+#include "SoundBufferBase.h"
+
 struct VOICE
 {
-	LPDIRECTSOUNDBUFFER lpDSBvoice;
+	SoundBufferBase* lpDSBvoice;
 	LPDIRECTSOUNDNOTIFY lpDSNotify;
 	bool bActive;			// Playback is active
 	bool bMute;
@@ -36,7 +38,7 @@ struct VOICE
 
 typedef VOICE* PVOICE;
 
-HRESULT DSGetLock(LPDIRECTSOUNDBUFFER pVoice, DWORD dwOffset, DWORD dwBytes,
+HRESULT DSGetLock(SoundBufferBase* pVoice, DWORD dwOffset, DWORD dwBytes,
 					  SHORT** ppDSLockedBuffer0, DWORD* pdwDSLockedBufferSize0,
 					  SHORT** ppDSLockedBuffer1, DWORD* pdwDSLockedBufferSize1);
 
