@@ -1,6 +1,6 @@
 #pragma once
 
-#include <SDL.h>
+#include "frontends/sdl/sdlcompat.h"
 #include <memory>
 #include <iosfwd>
 #include <string>
@@ -14,7 +14,7 @@ namespace sa2
 
   void printRendererInfo(std::ostream & os,
                          const std::shared_ptr<SDL_Renderer> & ren,
-                         const SDL_PixelFormatEnum pixelFormat,
+                         const PixelFormat_t pixelFormat,
                          const int selectedDriver);
 
   bool show_yes_no_dialog(const std::shared_ptr<SDL_Window> & win,

@@ -11,7 +11,7 @@
 #endif
 
 #include "Core.h"
-#include "config.h"
+#include "common_config.h"
 
 namespace
 {
