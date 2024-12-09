@@ -7,7 +7,10 @@ set(CMAKE_AUTORCC ON)
 find_package(Qt6 COMPONENTS Widgets Multimedia OpenGLWidgets)
 
 if(NOT Qt6_FOUND)
+    set(QHEXVIEW_USE_QT5 ON)
     find_package(Qt5 REQUIRED COMPONENTS Widgets Gamepad Multimedia)
+else()
+    set(QHEXVIEW_USE_QT5 OFF)
 endif()
 
 add_subdirectory(QHexView)
