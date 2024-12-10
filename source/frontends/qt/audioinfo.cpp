@@ -5,6 +5,10 @@
 #include "StdAfx.h"
 #include "Core.h"
 
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+typedef QLatin1String QLatin1StringView;
+#endif
+
 AudioInfo::AudioInfo(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::AudioInfo)
@@ -29,12 +33,13 @@ void AudioInfo::updateInfo(const qint64 speed, const qint64 target)
     myCounter = 0;
     const std::vector<QDirectSound::SoundInfo> & info = QDirectSound::getAudioInfo();
 
-    QString s("Channels Buffer Underruns\n");
+    QString s("Name   Channels Buffer  Underruns\n");
     for (const auto & i : info)
     {
         if (i.running)
         {
-            s += QString("      %1   %2   %3\n")
+            s += QString("%1   %2   %3   %4\n")
+                .arg(QLatin1StringView(i.name.c_str()), -10)
                 .arg(i.channels, 2)
                 .arg(i.buffer, 4)
                 .arg(i.numberOfUnderruns, 8);

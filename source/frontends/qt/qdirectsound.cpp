@@ -6,7 +6,16 @@
 #include <unordered_map>
 #include <memory>
 
+#include <QIODevice>
+#include <QAudioFormat>
+
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 #include <QAudioOutput>
+typedef QAudioOutput QAudioSink;
+#else
+#include <QAudioSink>
+#include <QMediaDevices>
+#endif
 
 namespace
 {
@@ -31,7 +40,7 @@ namespace
         virtual qint64 writeData(const char *data, qint64 len) override;
 
     private:
-        std::shared_ptr<QAudioOutput> myAudioOutput;
+        std::shared_ptr<QAudioSink> myAudioOutput;
     };
 
     std::unordered_map<IDirectSoundBuffer *, std::shared_ptr<DirectSoundGenerator> > activeSoundGenerators;
@@ -43,12 +52,22 @@ namespace
         QAudioFormat audioFormat;
         audioFormat.setSampleRate(mySampleRate);
         audioFormat.setChannelCount(myChannels);
+
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
         audioFormat.setSampleSize(myBitsPerSample);
         audioFormat.setCodec(QString::fromUtf8("audio/pcm"));
         audioFormat.setByteOrder(QAudioFormat::LittleEndian);
         audioFormat.setSampleType(QAudioFormat::SignedInt);
+#else
+        audioFormat.setSampleFormat(QAudioFormat::Int16);
 
-        myAudioOutput = std::make_shared<QAudioOutput>(audioFormat);
+        QAudioDevice info(QMediaDevices::defaultAudioOutput());
+        if (!info.isFormatSupported(audioFormat))
+        {
+            qDebug(appleAudio) << "Raw audio format not supported by backend, cannot play audio.";
+        }
+#endif
+        myAudioOutput = std::make_shared<QAudioSink>(audioFormat);
     }
 
     DirectSoundGenerator::~DirectSoundGenerator()
@@ -134,6 +153,7 @@ namespace
     QDirectSound::SoundInfo DirectSoundGenerator::getInfo()
     {
         QDirectSound::SoundInfo info;
+        info.name = myName;
         info.running = QIODevice::isOpen();
         info.channels = myChannels;
         info.numberOfUnderruns = GetBufferUnderruns();
