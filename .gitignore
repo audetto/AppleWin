@@ -249,3 +249,6 @@ CMakeLists.txt.user*
 
 # VSCode
 .vscode
+
+# libretro
+source/frontends/libretro/*.inl

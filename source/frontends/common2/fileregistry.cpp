@@ -85,6 +85,15 @@ namespace common2
 
   std::string GetHomeDir()
   {
+#ifdef _WIN32
+    char self[1024];
+    if (GetModuleFileNameA(0, self, sizeof(self)) >= sizeof(self))
+    {
+      throw std::runtime_error("${HOME} not set, cannot locate configuration file");
+    }
+
+    return std::string(self);
+#else
     const char* homeDir = getenv("HOME");
     if (!homeDir)
     {
@@ -92,10 +101,14 @@ namespace common2
     }
 
     return std::string(homeDir);
+#endif
   }
 
   std::string GetConfigFile(const std::string & filename)
   {
+#ifdef _WIN32
+    return GetHomeDir() + "/" + filename;
+#else
     const std::string dir = GetHomeDir() + "/.applewin";
     const int status = mkdir(dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
     if (!status || (errno == EEXIST))
@@ -108,6 +121,7 @@ namespace common2
       LogFileOutput("No registry. Cannot create %s in %s: %s\n", filename.c_str(), dir.c_str(), s);
       return std::string();
     }
+#endif
   }
 
   std::shared_ptr<Registry> CreateFileRegistry(const EmulatorOptions & options)
@@ -119,7 +133,11 @@ namespace common2
 
     if (options.useQtIni)
     {
+#ifdef _WIN32
+      filename = homeDir + "\\" + APPLICATION_NAME + ".conf";
+#else
       filename = homeDir + "/.config/" + ORGANIZATION_NAME + "/" + APPLICATION_NAME + ".conf";
+#endif
       saveOnExit = false;
     }
     else

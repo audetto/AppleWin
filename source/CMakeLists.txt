@@ -37,8 +37,6 @@ if ("${SLIRP_FOUND}" STREQUAL "")
   endif()
 endif()
 
-find_package(Boost REQUIRED)
-
 set(SOURCE_FILES
   Tfe/tfesupp.cpp
   Tfe/NetworkBackend.cpp
@@ -103,19 +101,13 @@ set(SOURCE_FILES
   FrameBase.cpp
   CmdLine.cpp
 
-  Configuration/PropertySheetHelper.cpp
-  Configuration/Config.cpp
-
-  linux/resources.cpp
-  linux/benchmark.cpp
-  linux/paddle.cpp
-  linux/version.cpp
-  linux/registryclass.cpp
-  linux/linuxframe.cpp
   linux/context.cpp
-  linux/cassettetape.cpp
-  linux/network/slirp2.cpp
-  linux/network/portfwds.cpp
+  linux/linuxframe.cpp
+  linux/paddle.cpp
+  linux/registryclass.cpp
+  linux/resources.cpp
+  linux/soundbuffer.cpp
+  linux/version.cpp
 
   linux/duplicates/Debugger_Display.cpp
   linux/duplicates/Debugger_Win32.cpp
@@ -132,12 +124,15 @@ set(SOURCE_FILES
   linux/duplicates/PageSound.cpp
   linux/duplicates/PageDisk.cpp
   linux/duplicates/PageAdvanced.cpp
+    
+  Configuration/PropertySheetHelper.cpp
+  Configuration/Config.cpp
 
   Z80VICE/z80.cpp
   Z80VICE/z80mem.cpp
   Z80VICE/daa.cpp
   )
-
+	
 set(HEADER_FILES
   Tfe/tfearch.h
   Tfe/tfesupp.h
@@ -218,28 +213,63 @@ set(HEADER_FILES
   Configuration/PropertySheetHelper.h
   Configuration/Config.h
 
-  linux/resources.h
-  linux/linuxinterface.h
-  linux/benchmark.h
-  linux/paddle.h
-  linux/version.h
-  linux/registryclass.h
-  linux/keyboardbuffer.h
-  linux/linuxframe.h
-  linux/cassettetape.h
-  linux/network/slirp2.h
-  linux/network/portfwds.h
-
   Z80VICE/z80.h
   Z80VICE/z80mem.h
   Z80VICE/z80regs.h
   Z80VICE/daa.h
   )
 
+if(WIN32)
+  set(SOURCE_FILES_PLATFORM
+    Registry.cpp
+    Keyboard.cpp
+    Speech.cpp
+    Tape.cpp
+    )
+  set(HEADER_FILES_PLATFORM
+    Registry.h
+    Keyboard.h
+    )
+  set(EXTRA_LIBS -lwsock32 -liphlpapi -ldsound -ldxguid -lwinmm -ldinput8 -luser32 -lgdi32 -lcomctl32 -lsapi -lstrmiids)
+  
+  # force static link of dependent libraries
+  if(EXISTS "${YAML_LIBRARY_DIRS}/libyaml.a")
+    set(YAML_LIBRARIES -L${YAML_LIBRARY_DIRS};libyaml.a)
+  endif()
+  if(EXISTS "${MINIZIP_LIBRARY_DIRS}/libminizip.a")
+    set(MINIZIP_LIBRARIES -L${MINIZIP_LIBRARY_DIRS};libminizip.a;libz.a;libbz2.a)
+  endif()
+  if(EXISTS "${SLIRP_LIBDIR}/libslirp.a")
+    set(SLIRP_LIBRARIES -L${SLIRP_LIBDIR};libslirp.a;libintl.a)
+  endif()
+else()
+  set(SOURCE_FILES_PLATFORM
+    linux/benchmark.cpp
+    linux/cassettetape.cpp
+    linux/network/slirp2.cpp
+    linux/network/portfwds.cpp
+    )
+
+  set(HEADER_FILES_PLATFORM
+    linux/resources.h
+    linux/benchmark.h
+    linux/paddle.h
+    linux/version.h
+    linux/registryclass.h
+    linux/keyboardbuffer.h
+    linux/linuxframe.h
+    linux/cassettetape.h
+    linux/network/slirp2.h
+    linux/network/portfwds.h
+    )
+
+  set(EXTRA_LIBS windows)
+endif()
+
 # we used to generate a shared object, but it turns out there are more cons than pros
 add_library(appleii STATIC
-  ${SOURCE_FILES}
-  ${HEADER_FILES}
+  ${SOURCE_FILES} ${SOURCE_FILES_PLATFORM}
+  ${HEADER_FILES} ${HEADER_FILES_PLATFORM}
   )
 
 if ("${PCAP_FOUND}" STREQUAL "1")
@@ -251,7 +281,6 @@ endif()
 target_include_directories(appleii PRIVATE
   ${YAML_INCLUDE_DIRS}
   ${PCAP_INCLUDE_DIRS}
-  ${Boost_INCLUDE_DIRS}
   ${SLIRP_INCLUDE_DIRS}
   Debugger
   )
@@ -268,10 +297,8 @@ target_link_libraries(appleii PRIVATE
   ${PCAP_LIBRARIES}
   ${SLIRP_LIBRARIES}
   ZLIB::ZLIB
-  )
-
-target_link_libraries(appleii PUBLIC
-  windows
+  common2
+  ${EXTRA_LIBS}
   )
 
 target_link_directories(appleii PRIVATE
@@ -287,7 +314,8 @@ target_compile_options(appleii PUBLIC
 
 add_custom_command(
   TARGET appleii POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/bin/*.SYM ${CMAKE_BINARY_DIR}
+  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/bin/A2_BASIC.SYM ${CMAKE_BINARY_DIR}
+  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/bin/APPLE2E.SYM ${CMAKE_BINARY_DIR}
   )
 
 configure_file(linux/config.h.in linux/config.h)

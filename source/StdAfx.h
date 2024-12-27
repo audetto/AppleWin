@@ -64,6 +64,7 @@ typedef UINT64 uint64_t;
 #define SIZE_T_FMT "lu"
 #define PTRDIFF_T_FMT "ld"
 #endif
+#define DWORD_T_FMT "lX"
 #else
 #define SIZE_T_FMT "zu"
 #define PTRDIFF_T_FMT "td"

@@ -13,11 +13,7 @@
 
 class LoggerContext;
 class RegistryContext;
-
-namespace common2
-{
-  class PTreeRegistry;
-}
+class Registry;
 
 namespace ra2
 {
@@ -59,7 +55,7 @@ namespace ra2
 
     // keep them in this order!
     std::shared_ptr<LoggerContext> myLoggerContext;
-    std::shared_ptr<common2::PTreeRegistry> myRegistry;
+    std::shared_ptr<Registry> myRegistry;
     std::shared_ptr<RegistryContext> myRegistryContext;
     std::shared_ptr<RetroFrame> myFrame;
 

@@ -3,7 +3,6 @@
 #include "SerialComms.h"
 #include "YamlHelper.h"
 
-
 CSuperSerialCard::CSuperSerialCard(UINT slot) :
   Card(CT_SSC, slot)
 {

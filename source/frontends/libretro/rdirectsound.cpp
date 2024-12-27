@@ -1,8 +1,9 @@
-#include "StdAfx.h"
+#include <StdAfx.h>
+
 #include "frontends/libretro/rdirectsound.h"
 #include "frontends/libretro/environment.h"
 
-#include "linux/linuxinterface.h"
+#include "linux/soundbuffer.h"
 
 #include <unordered_map>
 #include <memory>
@@ -37,41 +38,49 @@ namespace
     return ra2::AudioSource::UNKNOWN;
   }
 
-  class DirectSoundGenerator : public IDirectSoundBuffer 
+  class SoundGenerator : public SoundBuffer
   {
   public:
-    DirectSoundGenerator(LPCDSBUFFERDESC lpcDSBufferDesc);
-
-    virtual HRESULT Release() override;
+    HRESULT Init(DWORD dwFlags, DWORD dwBufferSize, DWORD nSampleRate, int nChannels, LPCSTR pDevName) override;
+    HRESULT Release() override;
 
     void writeAudio(const size_t fps, const bool write);
 
     bool isRunning();
 
     ra2::AudioSource getSource() const;
+    void setSource(ra2::AudioSource audioSource) { myAudioSource = audioSource; }
 
   private:
-    const ra2::AudioSource myAudioSource;
+    ra2::AudioSource myAudioSource = ra2::AudioSource::UNKNOWN;
     std::vector<int16_t> myMixerBuffer;
 
     void mixBuffer(const void * ptr, const size_t size);
   };
 
-  std::unordered_map<IDirectSoundBuffer *, std::shared_ptr<DirectSoundGenerator> > activeSoundGenerators;
+  std::vector<SoundGenerator*> activeSoundGenerators;
 
-  DirectSoundGenerator::DirectSoundGenerator(LPCDSBUFFERDESC lpcDSBufferDesc)
-    : IDirectSoundBuffer(lpcDSBufferDesc)
-    , myAudioSource(getAudioSourceFromName(myName))
+  HRESULT SoundGenerator::Init(DWORD dwFlags, DWORD dwBufferSize, DWORD nSampleRate, int nChannels, LPCSTR pDevName)
   {
+    myAudioSource = getAudioSourceFromName(pDevName);
+    return SoundBuffer::Init(dwFlags, dwBufferSize, nSampleRate, nChannels, pDevName);
   }
 
-  HRESULT DirectSoundGenerator::Release()
+  HRESULT SoundGenerator::Release()
   {
-    activeSoundGenerators.erase(this);
-    return IUnknown::Release();
+    for (auto iter = activeSoundGenerators.begin(); iter != activeSoundGenerators.end(); ++iter)
+    {
+      if (*iter == this)
+      {
+        activeSoundGenerators.erase(iter);
+        break;
+      }
+    }
+
+    return SoundBuffer::Release();
   }
 
-  bool DirectSoundGenerator::isRunning()
+  bool SoundGenerator::isRunning()
   {
     DWORD dwStatus;
     GetStatus(&dwStatus);
@@ -85,12 +94,12 @@ namespace
     }
   }
 
-  ra2::AudioSource DirectSoundGenerator::getSource() const
+  ra2::AudioSource SoundGenerator::getSource() const
   {
     return myAudioSource;
   }
 
-  void DirectSoundGenerator::mixBuffer(const void * ptr, const size_t size)
+  void SoundGenerator::mixBuffer(const void * ptr, const size_t size)
   {
     const int16_t frames = size / (sizeof(int16_t) * myChannels);
     const int16_t * data = static_cast<const int16_t *>(ptr);
@@ -122,7 +131,7 @@ namespace
     ra2::audio_batch_cb(myMixerBuffer.data(), frames);
   }
 
-  void DirectSoundGenerator::writeAudio(const size_t fps, const bool write)
+  void SoundGenerator::writeAudio(const size_t fps, const bool write)
   {
     const size_t frames = mySampleRate / fps;
     const size_t bytesToRead = frames * myChannels * sizeof(int16_t);
@@ -147,12 +156,24 @@ namespace
 
 }
 
-IDirectSoundBuffer * iCreateDirectSoundBuffer(LPCDSBUFFERDESC lpcDSBufferDesc)
+static SoundBufferBase* CreateSoundBuffer(void)
 {
-  std::shared_ptr<DirectSoundGenerator> generator = std::make_shared<DirectSoundGenerator>(lpcDSBufferDesc);
-  DirectSoundGenerator * ptr = generator.get();
-  activeSoundGenerators[ptr] = generator;
-  return ptr;
+  SoundGenerator * generator = new SoundGenerator();
+  activeSoundGenerators.push_back(generator);
+  return generator;
+}
+
+extern bool g_bDSAvailable;
+
+bool DSInit()
+{
+  SoundBufferBase::Create = CreateSoundBuffer;
+  g_bDSAvailable = true;
+  return true;
+}
+
+void DSUninit()
+{
 }
 
 namespace ra2
@@ -161,9 +182,8 @@ namespace ra2
   void writeAudio(const AudioSource selectedSource, const size_t fps)
   {
     bool found = false;
-    for (const auto & it : activeSoundGenerators)
+    for (auto* generator : activeSoundGenerators)
     {
-      const auto & generator = it.second;
       if (generator->isRunning())
       {
         const bool selected = !found && (selectedSource == generator->getSource());

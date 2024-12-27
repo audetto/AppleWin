@@ -311,7 +311,7 @@ void retro_run(void)
 bool retro_load_game(const retro_game_info *info)
 {
   ourGame.reset();
-  ra2::log_cb(RETRO_LOG_INFO, "RA2: %s\n", __FUNCTION__);
+  ra2::log_cb(RETRO_LOG_INFO, "RA2: %s %s\n", __FUNCTION__, info->path);
 
   enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_XRGB8888;
   if (!ra2::environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &fmt))

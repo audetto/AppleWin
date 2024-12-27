@@ -995,7 +995,7 @@ bool Spkr_DSInit()
 		Sleep(200);
 
 		hr = SpeakerVoice.lpDSBvoice->GetCurrentPosition(&dwCurrentPlayCursor, &dwCurrentWriteCursor);
-		LogFileOutput("Spkr_DSInit: GetCurrentPosition kludge (%08X)\n", hr);
+		LogFileOutput("Spkr_DSInit: GetCurrentPosition kludge (%08X)\n", (unsigned)hr);
 		LogOutput("[DSInit] PC=%08" DWORD_T_FMT ", WC=%08" DWORD_T_FMT ", Diff=%08" DWORD_T_FMT "\n", dwCurrentPlayCursor, dwCurrentWriteCursor, dwCurrentWriteCursor-dwCurrentPlayCursor);
 	}
 

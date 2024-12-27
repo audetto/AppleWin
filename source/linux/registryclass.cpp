@@ -1,3 +1,5 @@
+#include "StdAfx.h"
+
 #include "registryclass.h"
 #include "windows.h"
 #include "Log.h"

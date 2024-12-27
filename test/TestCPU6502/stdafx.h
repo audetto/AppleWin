@@ -5,12 +5,14 @@
 
 #pragma once
 
-#ifdef _MSC_VER
+#ifdef _WIN32
+
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 
 #include <stdio.h>
 #include <tchar.h>
-
-#include <windows.h>
+#include <crtdbg.h>
 
 #if _MSC_VER >= 1600	// <stdint.h> supported from VS2010 (cl.exe v16.00)
 #include <stdint.h> // cleanup WORD DWORD -> uint16_t uint32_t
@@ -24,11 +26,11 @@ typedef UINT64 uint64_t;
 
 #include <string>
 
-#else
+#else // !_WIN32
 
 #include <cstring>
 #include <cstdlib>
 #include "windows.h"
 #include <string>
 
-#endif
+#endif // _WIN32

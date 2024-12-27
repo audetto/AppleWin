@@ -11,16 +11,13 @@
 
 namespace common2
 {
-  struct EmulatorOptions;
 
   class CommonFrame : public LinuxFrame
   {
   public:
-    CommonFrame(const EmulatorOptions & options);
+    CommonFrame(bool autoBoot, bool fixedSpeed, bool syncWithTimer, bool allowVideoUpdate);
 
     void Begin() override;
-
-    BYTE* GetResource(WORD id, LPCSTR lpType, uint32_t expectedSize) override;
 
     virtual void ResetSpeed();
 
@@ -40,10 +37,6 @@ namespace common2
     void LoadSnapshot() override;
 
   protected:
-    virtual std::string getResourcePath(const std::string & filename) = 0;
-
-    static std::string getBitmapFilename(const std::string & resource);
-
     virtual void SetFullSpeed(const bool value);
     virtual bool CanDoFullSpeed();
 
@@ -56,8 +49,6 @@ namespace common2
     // used to synchronise if OpenGL cannot do it (or without it)
     bool mySynchroniseWithTimer;
     std::chrono::time_point<std::chrono::steady_clock> myLastSync;
-
-    std::vector<BYTE> myResource;
 
   private:
     const bool myAllowVideoUpdate;

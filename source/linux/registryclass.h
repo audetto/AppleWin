@@ -1,6 +1,9 @@
 #pragma once
 
-#include "wincompat.h"
+#ifndef _WIN32
+#include "linux/libwindows/wincompat.h"
+#endif
+
 #include <string>
 #include <map>
 #include <memory>

@@ -51,4 +51,6 @@ protected:
   bool myAutoBoot;  // non const to allow settings change
 };
 
+#ifndef _WIN32
 int MessageBox(HWND, LPCSTR lpText, LPCSTR lpCaption, UINT uType);
+#endif

@@ -72,6 +72,102 @@ VOICE::~VOICE(void)
 	}
 }
 
+#ifdef _MSC_VER
+
+class DSSoundBuffer : public SoundBufferBase
+{
+private:
+	LPDIRECTSOUNDBUFFER pBuffer;
+
+public:
+	HRESULT Init(DWORD dwFlags, DWORD dwBufferSize, DWORD nSampleRate, int nChannels, LPCSTR pDevName) override
+	{
+		if (!g_lpDS)
+			return E_FAIL;
+
+		WAVEFORMATEX wavfmt;
+		DSBUFFERDESC dsbdesc;
+
+		wavfmt.wFormatTag = WAVE_FORMAT_PCM;
+		wavfmt.nChannels = nChannels;
+		wavfmt.nSamplesPerSec = nSampleRate;
+		wavfmt.wBitsPerSample = 16;
+		wavfmt.nBlockAlign = wavfmt.nChannels == 1 ? 2 : 4;
+		wavfmt.nAvgBytesPerSec = wavfmt.nBlockAlign * wavfmt.nSamplesPerSec;
+
+		memset(&dsbdesc, 0, sizeof(dsbdesc));
+		dsbdesc.dwSize = sizeof(dsbdesc);
+		dsbdesc.dwBufferBytes = dwBufferSize;
+		dsbdesc.lpwfxFormat = &wavfmt;
+		dsbdesc.dwFlags = dwFlags | DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_STICKYFOCUS;
+
+		// Are buffers released when g_lpDS OR pVoice->lpDSBvoice is released?
+		// . From DirectX doc:
+		//   "Buffer objects are owned by the device object that created them. When the
+		//    device object is released, all buffers created by that object are also released..."
+		return g_lpDS->CreateSoundBuffer(&dsbdesc, &pBuffer, NULL);
+	}
+
+	HRESULT Release() override
+	{
+		if (!pBuffer)
+			return DS_OK;
+
+		HRESULT hr = pBuffer->Release();
+		pBuffer = NULL;
+		return hr;
+	}
+
+	HRESULT SetCurrentPosition(DWORD dwNewPosition) override
+	{
+		return pBuffer->SetCurrentPosition(dwNewPosition);
+	}
+
+	HRESULT GetCurrentPosition(LPDWORD lpdwCurrentPlayCursor, LPDWORD lpdwCurrentWriteCursor)
+	{
+		return pBuffer->GetCurrentPosition(lpdwCurrentPlayCursor, lpdwCurrentWriteCursor);
+	}
+
+	HRESULT Lock(DWORD dwWriteCursor, DWORD dwWriteBytes, LPVOID* lplpvAudioPtr1, DWORD* lpdwAudioBytes1, LPVOID* lplpvAudioPtr2, DWORD* lpdwAudioBytes2, DWORD dwFlags)
+	{
+		return pBuffer->Lock(dwWriteCursor, dwWriteBytes, lplpvAudioPtr1, lpdwAudioBytes1, lplpvAudioPtr2, lpdwAudioBytes2, dwFlags);
+	}
+
+	HRESULT Unlock(LPVOID lpvAudioPtr1, DWORD dwAudioBytes1, LPVOID lpvAudioPtr2, DWORD dwAudioBytes2)
+	{
+		return pBuffer->Unlock(lpvAudioPtr1, dwAudioBytes1, lpvAudioPtr2, dwAudioBytes2);
+	}
+
+	HRESULT Stop()
+	{
+		return pBuffer->Stop();
+	}
+
+	HRESULT Play(DWORD dwReserved1, DWORD dwReserved2, DWORD dwFlags)
+	{
+		return pBuffer->Play(dwReserved1, dwReserved2, dwFlags);
+	}
+
+	HRESULT SetVolume(LONG lVolume)
+	{
+		return pBuffer->SetVolume(lVolume);
+	}
+
+	HRESULT GetVolume(LONG* lplVolume)
+	{
+		return pBuffer->GetVolume(lplVolume);
+	}
+
+	HRESULT GetStatus(LPDWORD lpdwStatus)
+	{
+		return pBuffer->GetStatus(lpdwStatus);
+	}
+
+	HRESULT Restore()
+	{
+		return pBuffer->Restore();
+	}
+};
 
 //-----------------------------------------------------------------------------
 
@@ -137,9 +233,11 @@ static const char *DirectSound_ErrorText (HRESULT error)
 }
 #endif
 
+#endif // _MSC_VER
+
 //-----------------------------------------------------------------------------
 
-HRESULT DSGetLock(LPDIRECTSOUNDBUFFER pVoice, uint32_t dwOffset, uint32_t dwBytes,
+HRESULT DSGetLock(SoundBufferBase* pVoice, uint32_t dwOffset, uint32_t dwBytes,
 					  SHORT** ppDSLockedBuffer0, DWORD* pdwDSLockedBufferSize0,
 					  SHORT** ppDSLockedBuffer1, DWORD* pdwDSLockedBufferSize1)
 {
@@ -182,39 +280,20 @@ HRESULT DSGetLock(LPDIRECTSOUNDBUFFER pVoice, uint32_t dwOffset, uint32_t dwByte
 
 //-----------------------------------------------------------------------------
 
+SoundBufferBase::CreateSoundBufferFunc SoundBufferBase::Create = NULL;
+
 HRESULT DSGetSoundBuffer(VOICE* pVoice, uint32_t dwFlags, uint32_t dwBufferSize, uint32_t nSampleRate, int nChannels, const char* pszDevName)
 {
-	if (!g_lpDS)
-		return E_FAIL;
-
 	pVoice->name = pszDevName;
 
-	WAVEFORMATEX wavfmt;
-	DSBUFFERDESC dsbdesc;
+	SoundBufferBase* soundBuffer = SoundBufferBase::Create();
 
-	wavfmt.wFormatTag = WAVE_FORMAT_PCM;
-	wavfmt.nChannels = nChannels;
-	wavfmt.nSamplesPerSec = nSampleRate;
-	wavfmt.wBitsPerSample = 16;
-	wavfmt.nBlockAlign = wavfmt.nChannels==1 ? 2 : 4;
-	wavfmt.nAvgBytesPerSec = wavfmt.nBlockAlign * wavfmt.nSamplesPerSec;
-
-	memset (&dsbdesc, 0, sizeof (dsbdesc));
-	dsbdesc.dwSize = sizeof (dsbdesc);
-	dsbdesc.dwBufferBytes = dwBufferSize;
-	dsbdesc.lpwfxFormat = &wavfmt;
-	dsbdesc.dwFlags = dwFlags | DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_STICKYFOCUS;
-	dsbdesc.szName = pszDevName;
-
-	// Are buffers released when g_lpDS OR pVoice->lpDSBvoice is released?
-	// . From DirectX doc:
-	//   "Buffer objects are owned by the device object that created them. When the
-	//    device object is released, all buffers created by that object are also released..."
-	HRESULT hr = g_lpDS->CreateSoundBuffer(&dsbdesc, &pVoice->lpDSBvoice, NULL);
-	if(FAILED(hr))
+	HRESULT hr = soundBuffer->Init(dwFlags, dwBufferSize, nSampleRate, nChannels, pszDevName);
+	if (FAILED(hr))
 		return hr;
 
 	//
+	pVoice->lpDSBvoice = soundBuffer;
 
 	_ASSERT(g_uNumVoices < uMAX_VOICES);
 	if(g_uNumVoices < uMAX_VOICES)
@@ -256,7 +335,7 @@ bool DSVoiceStop(PVOICE Voice)
 	HRESULT hr = Voice->lpDSBvoice->Stop();
 	if(FAILED(hr))
 	{
-		if(g_fh) fprintf(g_fh, "%s: DSStop failed (%08X)\n", Voice->name.c_str(), hr);
+		if(g_fh) fprintf(g_fh, "%s: DSStop failed (%08X)\n", Voice->name.c_str(), (unsigned)hr);
 		return false;
 	}
 
@@ -281,7 +360,7 @@ bool DSZeroVoiceBuffer(PVOICE Voice, uint32_t dwBufferSize)
 	HRESULT hr = DSGetLock(Voice->lpDSBvoice, 0, 0, &pDSLockedBuffer, &dwDSLockedBufferSize, NULL, 0);
 	if(FAILED(hr))
 	{
-		if(g_fh) fprintf(g_fh, "%s: DSGetLock failed (%08X)\n", Voice->name.c_str(), hr);
+		if(g_fh) fprintf(g_fh, "%s: DSGetLock failed (%08X)\n", Voice->name.c_str(), (unsigned)hr);
 		return false;
 	}
 
@@ -291,14 +370,14 @@ bool DSZeroVoiceBuffer(PVOICE Voice, uint32_t dwBufferSize)
 	hr = Voice->lpDSBvoice->Unlock((void*)pDSLockedBuffer, dwDSLockedBufferSize, NULL, 0);
 	if(FAILED(hr))
 	{
-		if(g_fh) fprintf(g_fh, "%s: DSUnlock failed (%08X)\n", Voice->name.c_str(), hr);
+		if(g_fh) fprintf(g_fh, "%s: DSUnlock failed (%08X)\n", Voice->name.c_str(), (unsigned)hr);
 		return false;
 	}
 
 	hr = Voice->lpDSBvoice->Play(0,0,DSBPLAY_LOOPING);
 	if(FAILED(hr))
 	{
-		if(g_fh) fprintf(g_fh, "%s: DSPlay failed (%08X)\n", Voice->name.c_str(), hr);
+		if(g_fh) fprintf(g_fh, "%s: DSPlay failed (%08X)\n", Voice->name.c_str(), (unsigned)hr);
 		return false;
 	}
 
@@ -321,7 +400,7 @@ bool DSZeroVoiceWritableBuffer(PVOICE Voice, uint32_t dwBufferSize)
 							&pDSLockedBuffer1, &dwDSLockedBufferSize1);
 	if(FAILED(hr))
 	{
-		if(g_fh) fprintf(g_fh, "%s: DSGetLock failed (%08X)\n", Voice->name.c_str(), hr);
+		if(g_fh) fprintf(g_fh, "%s: DSGetLock failed (%08X)\n", Voice->name.c_str(), (unsigned)hr);
 		return false;
 	}
 
@@ -333,7 +412,7 @@ bool DSZeroVoiceWritableBuffer(PVOICE Voice, uint32_t dwBufferSize)
 									(void*)pDSLockedBuffer1, dwDSLockedBufferSize1);
 	if(FAILED(hr))
 	{
-		if(g_fh) fprintf(g_fh, "%s: DSUnlock failed (%08X)\n", Voice->name.c_str(), hr);
+		if(g_fh) fprintf(g_fh, "%s: DSUnlock failed (%08X)\n", Voice->name.c_str(), (unsigned)hr);
 		return false;
 	}
 
@@ -517,6 +596,13 @@ void SoundCore_TweakVolumes()
 
 //-----------------------------------------------------------------------------
 
+#ifdef _MSC_VER
+
+static SoundBufferBase* CreateSoundBuffer(void)
+{
+	return new DSSoundBuffer();
+}
+
 static UINT g_uDSInitRefCount = 0;
 
 bool DSInit()
@@ -527,11 +613,13 @@ bool DSInit()
 		return true;		// Already initialised successfully
 	}
 
+	SoundBufferBase::Create = CreateSoundBuffer;
+
 	num_sound_devices = 0;
 	HRESULT hr = DirectSoundEnumerate((LPDSENUMCALLBACK)DSEnumProc, NULL);
 	if(FAILED(hr))
 	{
-		if(g_fh) fprintf(g_fh, "DSEnumerate failed (%08X)\n",hr);
+		if(g_fh) fprintf(g_fh, "DSEnumerate failed (%08X)\n", (unsigned)hr);
 		return false;
 	}
 
@@ -551,7 +639,7 @@ bool DSInit()
 			break;
 		}
 
-		if(g_fh) fprintf(g_fh, "DSCreate failed for sound device #%d (%08X)\n",x,hr);
+		if(g_fh) fprintf(g_fh, "DSCreate failed for sound device #%d (%08X)\n",x, (unsigned)hr);
 	}
 	if(!bCreatedOK)
 	{
@@ -564,7 +652,7 @@ bool DSInit()
 	hr = g_lpDS->SetCooperativeLevel(hwnd, DSSCL_NORMAL);
 	if (FAILED(hr))
 	{
-		if(g_fh) fprintf(g_fh, "SetCooperativeLevel failed (%08X)\n",hr);
+		if(g_fh) fprintf(g_fh, "SetCooperativeLevel failed (%08X)\n", (unsigned)hr);
 		return false;
 	}
 
@@ -574,7 +662,7 @@ bool DSInit()
 	hr = g_lpDS->GetCaps(&DSCaps);
 	if(FAILED(hr))
 	{
-		if(g_fh) fprintf(g_fh, "GetCaps failed (%08X)\n",hr);
+		if(g_fh) fprintf(g_fh, "GetCaps failed (%08X)\n", (unsigned)hr);
 		// Not fatal: so continue...
 	}
 
@@ -611,6 +699,8 @@ void DSUninit()
 
 	SoundCore_StopTimer();
 }
+
+#endif
 
 //-----------------------------------------------------------------------------
 

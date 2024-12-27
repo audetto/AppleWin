@@ -1,16 +1,16 @@
 #pragma once
 
-#include "frontends/common2/gnuframe.h"
+#include "frontends/common2/commonframe.h"
 
 #include <vector>
 
 namespace ra2
 {
 
-  class RetroFrame : public common2::GNUFrame
+  class RetroFrame : public common2::CommonFrame
   {
   public:
-    RetroFrame(const common2::EmulatorOptions & options);
+    RetroFrame();
 
     void VideoPresentScreen() override;
     void FrameRefreshStatus(int drawflags) override;
@@ -19,6 +19,9 @@ namespace ra2
     void Begin() override;
     int FrameMessageBox(LPCSTR lpText, LPCSTR lpCaption, UINT uType) override;
     void GetBitmap(LPCSTR lpBitmapName, LONG cb, LPVOID lpvBits) override;
+
+    std::string Video_GetScreenShotFolder() const override { return std::string(""); }
+    BYTE* GetResource(WORD id, LPCSTR lpType, uint32_t expectedSize) override;
 
   protected:
     virtual void SetFullSpeed(const bool value) override;
