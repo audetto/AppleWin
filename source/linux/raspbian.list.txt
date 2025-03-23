@@ -3,7 +3,6 @@ g++
 xxd
 ninja-build
 pkg-config
-libyaml-dev
 libminizip-dev
 libboost-dev
 
