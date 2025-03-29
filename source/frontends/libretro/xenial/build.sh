@@ -1,4 +1,5 @@
 # docker run -it --rm -v "AppleWin:/build" git.libretro.com:5050/libretro-infrastructure/libretro-build-amd64-ubuntu:xenial-gcc9 bash
+# docker run -it --rm -v "AppleWin:/build" git.libretro.com:5050/libretro-infrastructure/libretro-build-mxe-win-cross-cores:gcc11 bash
 apt-get update -qy
 apt-get upgrade -qy
 git clone https://github.com/audetto/AppleWin.git --depth=1
