@@ -2415,60 +2415,7 @@ void Win32Frame::ProcessDiskPopupMenu(HWND hwnd, POINT pt, const int iDrive)
 
 			if (nRes)
 			{
-				FILE *hFile = fopen( pathname.c_str(), "wb");
-				if (hFile)
-				{
-					uint8_t *pDiskBytes = new uint8_t[ nDiskSize ];
-					memset( pDiskBytes, 0, nDiskSize );
-
-					if (bIsDOS33)
-					{
-						// File System
-						int VTOC_TRACK = 0x11; // TODO: Allow user to over-ride via command-line argument? --vtoc 17
-						Util_DOS33_FormatFileSystem( pDiskBytes, nDiskSize, VTOC_TRACK );
-						
-						// Boot Sector + OS
-						const size_t nDOS33Size = 3 * 16 * 256; // First 3 tracks * 16 sectors/track * 256 bytes/sector
-						const BYTE  *pDOS33Data = GetResource(IDR_OS_DOS33, "FIRMWARE", nDOS33Size);
-						if (pDOS33Data)
-						{
-							memcpy( pDiskBytes, pDOS33Data, nDOS33Size );
-
-							// DOS 3.3 resides on Track 0, 1, 2
-							// Track 0 was already reserved when the file system was formatted.
-							Util_DOS33_SetTrackUsed( pDiskBytes, VTOC_TRACK, 1 );
-							Util_DOS33_SetTrackUsed( pDiskBytes, VTOC_TRACK, 2 );
-						}
-						else
-						{
-							FrameMessageBox( "WARNING: Could't find built-in DOS 3.3 Operating System!\n\nDisk will have no boot sector.", pTitle, MB_OK|MB_ICONINFORMATION);
-						}
-					}
-					else // ProDOS
-					{
-							const size_t   nBootSectorsSize = 2 * 512;
-							const uint8_t *pBootSectorsData = (uint8_t*) GetResource(IDR_BOOT_SECTOR_PRODOS243, "FIRMWARE", nBootSectorsSize);
-							assert(pBootSectorsData);
-
-							SectorOrder_e eSectorOrder = INTERLEAVE_PRODOS_ORDER;
-							const char *pVolumeName = "BLANK";
-							Util_ProDOS_ForwardSectorInterleave( pDiskBytes, nDiskSize, eSectorOrder );
-							Util_ProDOS_FormatFileSystem       ( pDiskBytes, nDiskSize, pVolumeName  );
-							memcpy(pDiskBytes, pBootSectorsData, nBootSectorsSize);
-							if (bNewDiskCopyBitsyBoot) Util_ProDOS_CopyBitsyBoot( pDiskBytes, nDiskSize, pVolumeName, this );
-							if (bNewDiskCopyBitsyBye)  Util_ProDOS_CopyBitsyBye ( pDiskBytes, nDiskSize, pVolumeName, this );
-							if (bNewDiskCopyBASIC)     Util_ProDOS_CopyBASIC    ( pDiskBytes, nDiskSize, pVolumeName, this );
-							if (bNewDiskCopyProDOS)    Util_ProDOS_CopyDOS      ( pDiskBytes, nDiskSize, pVolumeName, this );
-							Util_ProDOS_ReverseSectorInterleave( pDiskBytes, nDiskSize, eSectorOrder );
-					}
-
-					fwrite( pDiskBytes, 1, nDiskSize, hFile );
-					fclose( hFile );
-				}
-				else
-				{
-					MessageBox( hwnd, TEXT("ERROR: Couldn't open new disk image."), pTitle, MB_OK );
-				}
+				New_DOSProDOS_Disk(pTitle, pathname, nDiskSize, bIsDOS33, bNewDiskCopyBitsyBoot, bNewDiskCopyBitsyBye, bNewDiskCopyBASIC, bNewDiskCopyProDOS, this);
 			}
 		}
 	}
@@ -2660,89 +2607,7 @@ void Win32Frame::ProcessDiskPopupMenu(HWND hwnd, POINT pt, const int iDrive)
 
 			if (nRes)
 			{
-				FILE *hFile = fopen( pathname.c_str(), "wb");
-				if (hFile)
-				{
-					size_t  nDiskBuffer = nDiskSize;
-					char   *pDiskBuffer = new char[ nDiskSize ];
-					memset( pDiskBuffer, 0, nDiskSize );
-
-					// See: firmware/BootSector/bootsector.a
-					uint8_t  aAppleWinBootSector[256];
-					bool     bUseAppleWinBootSector = !g_cmdLine.nBootSectorFileSize; // Can have custom boot loader via command line: -bootsector <file>
-					size_t   nBootSectorSize = bUseAppleWinBootSector ? sizeof(aAppleWinBootSector) :              g_cmdLine.nBootSectorFileSize  ;
-					uint8_t *pBootSector     = bUseAppleWinBootSector ?        aAppleWinBootSector  : new uint8_t[ g_cmdLine.nBootSectorFileSize ];
-					if (bUseAppleWinBootSector)
-					{
-						BYTE *pAppleWinBootSector = GetResource(IDR_BOOT_SECTOR, "FIRMWARE", sizeof(aAppleWinBootSector));
-						if (pAppleWinBootSector)
-						{
-							memcpy(aAppleWinBootSector, pAppleWinBootSector, sizeof(aAppleWinBootSector));
-
-							if (bIsHardDisk)
-							{
-								static_assert( sizeof(aAppleWinBootSector) == 256, "Boot sector size must be 256 bytes");
-								// Modify boot message depending on type of disk
-								// Floppy: THIS IS AN EMPTY DATA DISK.
-								// Hard  : THIS IS AN EMPTY HARD DISK.
-								//                          ^^^^
-								size_t nOffsetData = aAppleWinBootSector[ 0xFF ]; // MAGIC NUMBER: Last byte has offset of text message. See: firmware/BootSector/bootsector.a
-								if (nOffsetData > 0)
-								{
-									aAppleWinBootSector[ nOffsetData+0 ] = 0x80 | 'H';
-									aAppleWinBootSector[ nOffsetData+1 ] = 0x80 | 'A';
-									aAppleWinBootSector[ nOffsetData+2 ] = 0x80 | 'R';
-									aAppleWinBootSector[ nOffsetData+3 ] = 0x80 | 'D';
-								}
-							}
-						}
-						else
-						{
-							FrameMessageBox( "WARNING: Could't find built-in AppleWin boot sector!\n\nDisk will have no boot sector.", pTitle, MB_OK|MB_ICONINFORMATION);
-							nBootSectorSize = 0;
-						}
-					}
-					else
-					{
-						FILE *pFile = fopen( g_cmdLine.sBootSectorFileName.c_str(), "rb" );
-						if (pFile)
-						{
-							size_t nSize = MIN(g_cmdLine.nBootSectorFileSize, nDiskSize );
-							size_t nRead = fread( pBootSector, 1, nSize, pFile );
-							fclose( pFile );
-
-							if (g_cmdLine.nBootSectorFileSize > nDiskSize)
-							{
-								std::string sMessage( StrFormat(
-									  "WARNING: Custom boot sector (%zu) is larger then the disk image (%zu)!\n"
-									  "\n"
-									  "Restricting boot sector to disk image size."
-									, g_cmdLine.nBootSectorFileSize
-									, nDiskSize
-								));
-								FrameMessageBox( sMessage.c_str(), pTitle, MB_OK | MB_ICONINFORMATION);
-							}
-						}
-						else
-						{
-							FrameMessageBox( TEXT("WARNING: Couldn't open custom boot sector file.\n\nNo boot sector written."), pTitle, MB_OK | MB_ICONERROR );
-							nBootSectorSize = 0;
-						}
-					}
-
-					memcpy( pDiskBuffer, pBootSector, nBootSectorSize );
-					fwrite( pDiskBuffer, 1, nDiskSize, hFile );
-					fclose( hFile );
-
-					if (!bUseAppleWinBootSector)
-					{
-						delete [] pBootSector;
-					}
-				}
-				else
-				{
-					MessageBox( hwnd, TEXT("ERROR: Couldn't open new disk image."), pTitle, MB_OK );
-				}
+				New_Blank_Disk(pTitle, pathname, nDiskSize, bIsHardDisk, pWinFrame);
 			}
 		}
 	}
@@ -2773,68 +2638,7 @@ void Win32Frame::ProcessDiskPopupMenu(HWND hwnd, POINT pt, const int iDrive)
 				std::string pathname = szFilename;
 				if (FileExists( pathname ))
 				{
-					FILE *hFile = fopen( pathname.c_str(), "r+b" );
-					if (hFile)
-					{
-						fseek( hFile, 0, SEEK_END );
-						size_t nDiskSize = ftell( hFile );
-						fseek( hFile, 0, SEEK_SET );
-
-						size_t nMaxDiskSize = HARDDISK_32M_SIZE;
-
-						if (nDiskSize > nMaxDiskSize)
-						{
-							std::string sMessage(StrFormat(
-								  "ERROR: Disk Image Size (%zu bytes) > maximum ProDOS volume size (%zu bytes)"
-								, nDiskSize
-								, nMaxDiskSize
-							));
-							FrameMessageBox( sMessage.c_str(), "Format", MB_ICONWARNING | MB_OK);
-						}
-						else
-						{
-							uint8_t *pDiskBytes = new uint8_t[ nDiskSize ];
-							size_t nReadSize = fread( pDiskBytes, 1, nDiskSize, hFile );
-							assert( nReadSize == nDiskSize );
-
-							// We can have DOS or ProDOS sector interleaving
-							//     Extension  Interleave
-							//     .bin       Unknown, assume DOS
-							//     .dsk       DOS
-							//     .po        ProDOS
-							//     .hdv       ProDOS
-							SectorOrder_e eSectorOrder = Util_Disk_CalculateSectorOrder( pathname );
-							if (eSectorOrder == INTERLEAVE_AUTO_DETECT)
-							{
-								int res = FrameMessageBox(
-									"Unable to auto-detect the disk image sector order!\n"
-									"\n"
-									"Is this image using a ProDOS sector order?\n"
-									"(No will use DOS 3.3 sector order)"
-									, "Format", MB_ICONWARNING|MB_YESNO);
-								eSectorOrder = (res == IDYES)
-								             ? INTERLEAVE_PRODOS_ORDER
-								             : INTERLEAVE_DOS33_ORDER
-							                 ;
-							}
-							assert (eSectorOrder !=  INTERLEAVE_AUTO_DETECT);
-
-							const char *pVolumeName = "BLANK";
-							Util_ProDOS_ForwardSectorInterleave( pDiskBytes, nDiskSize, eSectorOrder );
-							Util_ProDOS_FormatFileSystem       ( pDiskBytes, nDiskSize, pVolumeName  );
-							Util_ProDOS_ReverseSectorInterleave( pDiskBytes, nDiskSize, eSectorOrder );
-
-							fseek( hFile, 0, SEEK_SET );
-							size_t nWroteSize = fwrite( pDiskBytes, 1, nReadSize, hFile );
-							if (nWroteSize != nDiskSize)
-							{
-								FrameMessageBox( "ERROR: Unable to write ProDOS File System", "Format", MB_ICONWARNING | MB_OK);
-							}
-
-							delete [] pDiskBytes;
-						}
-						fclose( hFile );
-					}
+					Format_ProDOS_Disk(pathname, this);
 				}
 			}
 		}
@@ -2862,53 +2666,7 @@ void Win32Frame::ProcessDiskPopupMenu(HWND hwnd, POINT pt, const int iDrive)
 				std::string pathname = szFilename;
 				if (FileExists( pathname ))
 				{
-					FILE *hFile = fopen( pathname.c_str(), "r+b" );
-					if (hFile)
-					{
-						fseek( hFile, 0, SEEK_END );
-						size_t nDiskSize = ftell( hFile );
-						fseek( hFile, 0, SEEK_SET );
-
-						// Verify floppy size is <= 160KB (max 40 tracks) since that is the largest supported by DOS 3.3
-						// TODO: Maybe use CImageBase::IsValidImageSize() ?
-						size_t nMinDiskSize = 34         *  TRACK_DENIBBLIZED_SIZE;
-						size_t nMaxDiskSize = TRACKS_MAX * TRACK_DENIBBLIZED_SIZE;
-
-						std::string sMessage;
-						if (nDiskSize < nMinDiskSize)
-						{
-							sMessage = StrFormat( "ERROR: Disk image size (%zu bytes) < minimum DOS 3.3 image size (%zu bytes)", nDiskSize, nMinDiskSize );
-							FrameMessageBox( sMessage.c_str(), "Format", MB_ICONERROR | MB_OK);
-						}
-						else
-						if (nDiskSize > nMaxDiskSize)
-						{
-							sMessage = StrFormat( "ERROR: Disk image size (%zu bytes) > maximum DOS 3.3 image size (%zu bytes)", nDiskSize, nMaxDiskSize );
-							FrameMessageBox( sMessage.c_str(), "Format", MB_ICONERROR | MB_OK);
-						}
-						else
-						{
-							uint8_t *pDiskBytes = new uint8_t[ nDiskSize ];
-							size_t nReadSize = fread( pDiskBytes, 1, nDiskSize, hFile );
-							assert( nReadSize == nDiskSize );
-
-							int VTOC_TRACK = 0x11; // TODO: Allow user to over-ride via command-line argument? --vtoc 17
-							Util_DOS33_FormatFileSystem( pDiskBytes, nDiskSize, VTOC_TRACK );
-
-							fseek( hFile, 0, SEEK_SET );
-							size_t nWroteSize = fwrite( pDiskBytes, 1, nReadSize, hFile );
-							if (nWroteSize != nDiskSize)
-							{
-								FrameMessageBox( "ERROR: Unable to write DOS 3.3 file system", "Format", MB_ICONWARNING | MB_OK);
-							}
-							delete [] pDiskBytes;
-						}
-						fclose( hFile );
-					}
-					else
-					{
-						FrameMessageBox( "ERROR: Unable to open disk image for writing DOS 3.3 file system", "Format", MB_ICONWARNING | MB_OK);
-					}
+					FormatDFormat_DOS33_DiskOS33Disk(pathname, this);
 				}
 			}
 		}

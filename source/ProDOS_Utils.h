@@ -36,9 +36,17 @@ SectorOrder_e Util_Disk_CalculateSectorOrder(const std::string& pathname);
 void Util_ProDOS_ForwardSectorInterleave (uint8_t *pDiskBytes, const size_t nDiskSize, const SectorOrder_e eSectorOrder);
 void Util_ProDOS_ReverseSectorInterleave (uint8_t *pDiskBytes, const size_t nDiskSize, const SectorOrder_e eSectorOrder);
 void Util_ProDOS_FormatFileSystem (uint8_t *pDiskBytes, const size_t nDiskSize, const char *pVolumeName);
-bool Util_ProDOS_CopyBASIC ( uint8_t *pDiskBytes, const size_t nDiskSize, const char *pVolumeName, FrameBase *pWinFrame );
-bool Util_ProDOS_CopyBitsyBoot( uint8_t *pDiskBytes, const size_t nDiskSize, const char *pVolumeName, FrameBase *pWinFrame );
-bool Util_ProDOS_CopyBitsyBye ( uint8_t *pDiskBytes, const size_t nDiskSize, const char *pVolumeName, FrameBase *pWinFrame );
-bool Util_ProDOS_CopyDOS ( uint8_t *pDiskBytes, const size_t nDiskSize, const char *pVolumeName, FrameBase *pWinFrame );
+bool Util_ProDOS_CopyBASIC ( uint8_t *pDiskBytes, const size_t nDiskSize, const char *pVolumeName, FrameBase *pFrame );
+bool Util_ProDOS_CopyBitsyBoot( uint8_t *pDiskBytes, const size_t nDiskSize, const char *pVolumeName, FrameBase *pFrame );
+bool Util_ProDOS_CopyBitsyBye ( uint8_t *pDiskBytes, const size_t nDiskSize, const char *pVolumeName, FrameBase *pFrame );
+bool Util_ProDOS_CopyDOS ( uint8_t *pDiskBytes, const size_t nDiskSize, const char *pVolumeName, FrameBase *pFrame );
 void Util_DOS33_SetTrackUsed ( uint8_t *pDiskBytes, const int nVTOC_Track, int nTrackUsed );
 void Util_DOS33_FormatFileSystem ( uint8_t *pDiskBytes, const size_t nDiskSize, const int nVTOC_Track );
+
+void New_DOSProDOS_Disk( const char * pTitle, const std::string & pathname, const size_t nDiskSize,
+	const bool bIsDOS33, const bool bNewDiskCopyBitsyBoot, const bool bNewDiskCopyBitsyBye, const bool bNewDiskCopyBASIC, const bool bNewDiskCopyProDOS,
+	FrameBase *pFrame );
+void New_Blank_Disk( const char * pTitle, const std::string & pathname, 
+	const size_t nDiskSize, const bool bIsHardDisk, FrameBase *pFrame );
+void Format_ProDOS_Disk( const std::string & pathname, FrameBase *pFrame);
+void Format_DOS33_Disk( const std::string & pathname, FrameBase *pFrame);
