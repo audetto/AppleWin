@@ -1,6 +1,7 @@
 #pragma once
 
 #include "NetworkCard.h"
+#include "Tfe/tfearch.h"
 
 /* define this only if VICE should write each and every frame received
    and send into the VICE log
@@ -132,8 +133,8 @@ public:
 
 	virtual const std::shared_ptr<NetworkBackend> & GetNetworkBackend() const;
 
-	BYTE tfe_read(WORD ioaddress);
-	void tfe_store(WORD ioaddress, BYTE byte);
+	BYTE REGPARM1 tfe_read(WORD ioaddress);
+	void REGPARM2 tfe_store(WORD ioaddress, BYTE byte);
 
 	static const std::string& GetSnapshotCardName(void);
 

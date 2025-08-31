@@ -27,6 +27,12 @@
 #ifndef _Z80_H
 #define _Z80_H
 
+#ifdef WATCOM_COMPILE
+#include "../mem.h"
+#else
+#include "../CommonVICE/mem.h"         // [AppleWin-TC]
+#endif
+
 struct z80_regs_s;
 
 extern struct z80_regs_s z80_regs;
@@ -40,11 +46,13 @@ extern void z80_reset(void);
 DWORD z80_mainloop(ULONG uTotalCycles, ULONG uExecutedCycles);
 //extern void z80_trigger_dma(void);
 
-BYTE z80_RDMEM(WORD Addr);
-void z80_WRMEM(WORD Addr, BYTE Value);
+BYTE REGPARM1 z80_RDMEM(WORD Addr);
+void REGPARM2 z80_WRMEM(WORD Addr, BYTE Value);
 
 const std::string& Z80_GetSnapshotCardName(void);
 void Z80_SaveSnapshot(class YamlSaveHelper& yamlSaveHelper, const UINT uSlot);
 bool Z80_LoadSnapshot(class YamlLoadHelper& yamlLoadHelper, UINT uSlot, UINT version);
 
 #endif
+
+
