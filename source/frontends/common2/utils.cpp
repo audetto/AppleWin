@@ -90,7 +90,11 @@ namespace common2
         const char *var = "HOME";
 #endif
         const std::filesystem::path home = getEnvOrDefault(var);
+#if IOS
+        return home / "Documents";
+#else
         return home;
+#endif
     }
 
     std::filesystem::path getConfigFile(const std::string &filename)
