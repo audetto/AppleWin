@@ -276,6 +276,7 @@ endif()
 target_link_libraries(appleii PUBLIC
   yaml
   minizip
+  apple2roms
   )
 
 target_link_directories(appleii PUBLIC
@@ -284,9 +285,19 @@ target_link_directories(appleii PUBLIC
   ${ZLIB_LIBRARY_DIRS}
   )
 
-target_compile_options(appleii PUBLIC
-  -Wno-multichar
+if (MSVC)
+  target_compile_options(appleii PUBLIC
+    /wd4566   # disable multi-character constant warning
   )
+  target_compile_definitions(appleii PRIVATE 
+    NOMINMAX            # to avoid conflicts with std::min/max
+    DISABLE_SPEECH_API  # undefine because the original AppleWin speech API is not supported here
+  )
+else()
+  target_compile_options(appleii PUBLIC
+    -Wno-multichar
+  )
+endif()
 
 # wildcards (*.SYM) are not supported on Windows msys2
 add_custom_command(

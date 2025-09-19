@@ -37,10 +37,13 @@ void addTextToBuffer(const char *text)
             addKeyToBuffer(0x0d);
             break;
         }
-        case 0x20 ... 0x7e:
+        default:
         {
-            addKeyToBuffer(*text);
-            break;
+            if (*text >= 0x20 && *text <= 0x7e)
+            {
+                addKeyToBuffer(*text);
+                break;
+            }
         }
         }
         ++text;

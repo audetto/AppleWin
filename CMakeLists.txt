@@ -24,7 +24,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # this is originally a Windows project, so it uses _DEBUG, not NDEBUG
 add_compile_definitions("$<$<CONFIG:DEBUG>:_DEBUG>")
-add_compile_options(-Werror=return-type -Wno-switch)
+if (MSVC)
+  add_compile_options(/W4)
+else()
+  add_compile_options(-Werror=return-type -Wno-switch)
+endif()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   add_compile_options(-Werror=format -Wno-error=format-overflow -Wno-error=format-truncation -Wno-psabi)
@@ -71,6 +75,7 @@ endif()
 
 if (BUILD_SA2)
   add_subdirectory(source/frontends/sdl)
+  set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT sa2)
 endif()
 
 if (NOT WIN32)
