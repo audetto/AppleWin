@@ -127,11 +127,11 @@ target_include_directories(sa2 PRIVATE
   )
 
 if (MSVC)
-  target_compile_definitions(sa2 PRIVATE 
+  target_compile_definitions(sa2 PRIVATE
     NOMINMAX            # to avoid conflicts with std::min/max
     DISABLE_SPEECH_API  # undefine because the original AppleWin speech API is not supported here
     IMGUI_USER_CONFIG="frontends/sdl/imgui/imconfig.h"
-  )      
+  )
 else()
   target_compile_definitions(sa2 PRIVATE
     IMGUI_USER_CONFIG="frontends/sdl/imgui/imconfig.h"
@@ -143,6 +143,7 @@ install(TARGETS sa2
   RUNTIME_DEPENDENCIES
     PRE_EXCLUDE_REGEXES "api-ms-" "ext-ms-"    # skip Windows system DLLs
     POST_EXCLUDE_REGEXES ".*system32/.*"       # skip more system DLLs
+  FRAMEWORK DESTINATION Frameworks
   RUNTIME DESTINATION bin
   LIBRARY DESTINATION bin
   ARCHIVE DESTINATION lib
