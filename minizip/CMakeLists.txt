@@ -14,3 +14,7 @@ add_library(minizip STATIC
 target_include_directories(minizip INTERFACE
   ${CMAKE_CURRENT_SOURCE_DIR}/..
   )
+
+find_package(ZLIB REQUIRED)
+
+target_link_libraries(minizip PRIVATE ZLIB::ZLIB)
