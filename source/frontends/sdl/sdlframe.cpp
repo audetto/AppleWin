@@ -672,8 +672,7 @@ namespace sa2
         const int sh = video.GetFrameBufferBorderlessHeight();
 
         // initialise with defaults
-        common2::Geometry actual = {
-            .width = sw * 2, .height = sh * 2, .x = SDL_WINDOWPOS_UNDEFINED, .y = SDL_WINDOWPOS_UNDEFINED};
+        common2::Geometry actual = { sw * 2, sh * 2, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED };
 
         // add registry information
         loadGeometryFromRegistry("sa2", actual);
