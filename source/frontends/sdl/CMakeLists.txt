@@ -126,18 +126,16 @@ target_include_directories(sa2 PRIVATE
   ${IMGUI_CLUB_PATH}/imgui_memory_editor
   )
 
+target_compile_definitions(sa2 PRIVATE
+  IMGUI_USER_CONFIG="frontends/sdl/imgui/imconfig.h"
+)
+
 if (MSVC)
   target_compile_definitions(sa2 PRIVATE 
     NOMINMAX            # to avoid conflicts with std::min/max
     DISABLE_SPEECH_API  # undefine because the original AppleWin speech API is not supported here
-    IMGUI_USER_CONFIG="frontends/sdl/imgui/imconfig.h"
-  )      
-else()
-  target_compile_definitions(sa2 PRIVATE
-    IMGUI_USER_CONFIG="frontends/sdl/imgui/imconfig.h"
-  )
+  ) 
 endif()
-
 
 install(TARGETS sa2
   RUNTIME_DEPENDENCIES
