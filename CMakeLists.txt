@@ -65,8 +65,12 @@ if (BUILD_LIBRETRO OR BUILD_APPLEN OR BUILD_SA2)
   add_subdirectory(source/frontends/common2)
 endif()
 
-if (BUILD_APPLEN)
-  add_subdirectory(source/frontends/ncurses)
+if (NOT MSVC)
+  # ncurses is not supported on Windows MSVC, only on MSYS2/MinGW
+  # TODO: add support for Windows MSVC via PDCurses
+  if (BUILD_APPLEN)
+    add_subdirectory(source/frontends/ncurses)
+  endif()
 endif()
 
 if (BUILD_LIBRETRO)
