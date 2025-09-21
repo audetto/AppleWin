@@ -141,6 +141,7 @@ install(TARGETS sa2
   RUNTIME_DEPENDENCIES
     PRE_EXCLUDE_REGEXES "api-ms-" "ext-ms-"    # skip Windows system DLLs
     POST_EXCLUDE_REGEXES ".*system32/.*"       # skip more system DLLs
+  FRAMEWORK DESTINATION Frameworks
   RUNTIME DESTINATION bin
   LIBRARY DESTINATION bin
   ARCHIVE DESTINATION lib
