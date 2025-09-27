@@ -45,8 +45,10 @@
 #define SM_CXPADDEDBORDER 92
 #endif
 
-#ifndef __MINGW32__ 
-#define USE_SPEECH_API
+#ifndef DISABLE_SPEECH_API
+#  ifndef __MINGW32__
+#    define USE_SPEECH_API
+#  endif
 #endif
 
 #ifdef __MINGW32__

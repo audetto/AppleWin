@@ -10,6 +10,7 @@ find_package(SDL2 REQUIRED)
 # we should use find_package, but Ubuntu does not provide it for SDL2_image
 pkg_search_module(SDL2_IMAGE REQUIRED SDL2_image)
 
+target_compile_features(common2 PUBLIC cxx_std_20)
 
 if ((${CMAKE_SYSTEM_NAME} MATCHES "Darwin") OR (${CMAKE_SYSTEM_NAME} MATCHES "Windows"))
   # only OpenGL supported on MacOS and Windows
@@ -26,7 +27,6 @@ else()
     IMGUI_IMPL_OPENGL_ES2
   )
 endif()
-
 
 set(SOURCE_FILES
   main.cpp
@@ -128,7 +128,21 @@ target_include_directories(sa2 PRIVATE
 
 target_compile_definitions(sa2 PRIVATE
   IMGUI_USER_CONFIG="frontends/sdl/imgui/imconfig.h"
-  )
+)
+
+if (MSVC)
+  target_compile_definitions(sa2 PRIVATE 
+    NOMINMAX            # to avoid conflicts with std::min/max
+    DISABLE_SPEECH_API  # undefine because the original AppleWin speech API is not supported here
+  ) 
+endif()
 
 install(TARGETS sa2
-  DESTINATION bin)
+  RUNTIME_DEPENDENCIES
+    PRE_EXCLUDE_REGEXES "api-ms-" "ext-ms-"    # skip Windows system DLLs
+    POST_EXCLUDE_REGEXES ".*system32/.*"       # skip more system DLLs
+  FRAMEWORK DESTINATION Frameworks
+  RUNTIME DESTINATION bin
+  LIBRARY DESTINATION bin
+  ARCHIVE DESTINATION lib
+)
