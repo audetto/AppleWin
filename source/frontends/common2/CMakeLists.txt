@@ -33,7 +33,9 @@ add_library(common2 STATIC
   ${HEADER_FILES}
   )
 
-find_package(Boost REQUIRED)
+if (NOT BUILD_LIBRETRO OR NOT APPLE)
+  find_package(Boost REQUIRED)
+endif()
 
 target_include_directories(common2 PRIVATE
   ${CMAKE_CURRENT_BINARY_DIR}

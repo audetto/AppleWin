@@ -47,6 +47,12 @@ execute_process(
 
 include_directories(source)
 
+# Fetch Boost for libretro on macOS
+if(BUILD_LIBRETRO AND APPLE)
+  list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+  include(FetchBoost)
+endif()
+
 add_subdirectory(libyaml)
 add_subdirectory(minizip)
 add_subdirectory(source)
