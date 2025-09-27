@@ -8,6 +8,11 @@
 #include <fstream>
 #include <unistd.h>
 
+#ifdef _WIN32
+#include <fcntl.h>
+#include <sys/stat.h>
+#endif
+
 namespace
 {
     class AutoFile
@@ -26,8 +31,18 @@ namespace
     AutoFile::AutoFile()
     {
 #ifdef _WIN32
-        char pattern[] = "/tmp/awXXXXXX";
-        myFD = mkstemp(pattern);
+        char tempPath[MAX_PATH], pattern[MAX_PATH];
+        UINT result = GetTempPathA(MAX_PATH, tempPath);
+        if (result == 0 || result > MAX_PATH)
+        {
+            throw std::runtime_error("Could not determine temp path");
+        }
+        GetTempFileNameA(tempPath, "aw", 0, pattern);
+        if (result == 0 || result > MAX_PATH)
+        {
+            throw std::runtime_error("Could not generate temporary filename");
+        }
+        myFD = open(pattern, O_RDWR | O_CREAT, _S_IREAD | _S_IWRITE);
 #else
         char pattern[] = "/tmp/awXXXXXX.aws.yaml";
         myFD = mkstemps(pattern, 9);
