@@ -54,10 +54,14 @@ namespace ra2
         void serialise(Buffer<char> &buffer) const;
         void deserialise(Buffer<char const> &buffer);
 
+        bool handleDiskSwapInputs();
+
     private:
         std::vector<DiskInfo> myImages;
 
         bool myEjected;
+        bool myChangingDisks;
+        int myChangingDisksDirection;
         size_t myIndex;
         std::string myCurrentDiskFolder;
 
