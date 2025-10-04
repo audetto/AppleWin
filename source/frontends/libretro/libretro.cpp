@@ -291,7 +291,16 @@ void retro_set_video_refresh(retro_video_refresh_t cb)
 void retro_run(void)
 {
     ourGame->updateVariables();
-    ourGame->processInputEvents();
+
+    if (ourGame->getDiskControl().handleDiskSwapInputs())
+    {
+        /* ignore other input while swapping disks */
+    }
+    else
+    {
+        ourGame->processInputEvents();
+    }
+
     ourGame->executeOneFrame();
     GetFrame().VideoPresentScreen();
     ourGame->writeAudio(ra2::Game::FPS, ra2::Game::SAMPLE_RATE, ra2::Game::CHANNELS);
