@@ -24,3 +24,7 @@ target_include_directories(yaml PRIVATE
 target_compile_definitions(yaml PRIVATE
   HAVE_CONFIG_H
   )
+
+if (MSVC)
+  target_compile_definitions(yaml PUBLIC YAML_DECLARE_STATIC)
+endif()
