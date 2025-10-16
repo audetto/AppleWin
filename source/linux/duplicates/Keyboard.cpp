@@ -6,45 +6,53 @@
 
 #include <queue>
 
+// number of accesses of current key before it's forcibly removed from the queue
+// when a new keystroke comes in. Technically on a non-GS Apple II, a new key replaces
+// the old in the latch. But this would not allow pasting in text.
+#define LATCH_RESET_AFTER_ACCESS_COUNT 5
+
 namespace
 {
-    std::queue<BYTE> keys;
-    bool g_bCapsLock = true; // Caps lock key for Apple2 and Lat/Cyr lock for Pravets8
-    BYTE keycode = 0;
+	std::queue<BYTE> keys;
+	bool g_bCapsLock = true; // Caps lock key for Apple2 and Lat/Cyr lock for Pravets8
+	BYTE keycode = 0;
+	BYTE latchAccesses = 0;	 // Number of accesses of the latch to read the current key
 
-    void setKeyCode()
-    {
-        if (!keys.empty())
-        {
-            keycode = keys.front();
-        }
-    }
+	void setKeyCode()
+	{
+		if (!keys.empty())
+		{
+			keycode = keys.front();
+			++latchAccesses;
+		}
+	}
 } // namespace
 
 void addKeyToBuffer(BYTE key)
 {
-    keys.push(key);
+	if (latchAccesses >= LATCH_RESET_AFTER_ACCESS_COUNT)
+	{
+		keys.pop();
+		latchAccesses = 0;
+	}
+	keys.push(key);
 }
 
 void addTextToBuffer(const char *text)
 {
-    while (*text)
-    {
-        switch (*text)
-        {
-        case '\n':
-        {
-            addKeyToBuffer(0x0d);
-            break;
-        }
-        case 0x20 ... 0x7e:
-        {
-            addKeyToBuffer(*text);
-            break;
-        }
-        }
-        ++text;
-    }
+	while (*text)
+	{
+		if (*text == '\n')
+		{
+			addKeyToBuffer(0x0d);
+		}
+		else if (*text >= 0x20 && *text <= 0x7e)
+		{
+			addKeyToBuffer(*text);
+		}
+		// skip non ASCII characters
+		++text;
+	}
 }
 
 void KeybSetAltGrSendsWM_CHAR(bool state)
@@ -57,33 +65,33 @@ void KeybSetCapsLock(bool state)
 
 bool KeybGetCapsStatus()
 {
-    return g_bCapsLock;
+	return g_bCapsLock;
 }
 
 BYTE KeybGetKeycode()
 {
-    return keycode;
+	return keycode;
 }
 
 BYTE KeybReadData()
 {
-    LogFileTimeUntilFirstKeyRead();
+	LogFileTimeUntilFirstKeyRead();
 
-    setKeyCode();
+	setKeyCode();
 
-    return keycode | (keys.empty() ? 0 : 0x80);
+	return keycode | (keys.empty() ? 0 : 0x80);
 }
 
 BYTE KeybReadFlag()
 {
-    _ASSERT(!IS_APPLE2); // And also not Pravets machines?
+	_ASSERT(!IS_APPLE2); // And also not Pravets machines?
 
-    BYTE res = KeybClearStrobe();
-    if (res)
-        return res;
+	BYTE res = KeybClearStrobe();
+	if (res)
+		return res;
 
-    // AKD
-    return keycode | (keys.empty() ? 0 : 0x80);
+	// AKD
+	return keycode | (keys.empty() ? 0 : 0x80);
 }
 
 #define SS_YAML_KEY_LASTKEY "Last Key"
@@ -91,65 +99,57 @@ BYTE KeybReadFlag()
 
 static std::string KeybGetSnapshotStructName(void)
 {
-    static const std::string name("Keyboard");
-    return name;
+	static const std::string name("Keyboard");
+	return name;
 }
 
 void KeybSaveSnapshot(YamlSaveHelper &yamlSaveHelper)
 {
-    YamlSaveHelper::Label state(yamlSaveHelper, "%s:\n", KeybGetSnapshotStructName().c_str());
-    yamlSaveHelper.SaveHexUint8(SS_YAML_KEY_LASTKEY, keycode);
-    yamlSaveHelper.SaveBool(SS_YAML_KEY_KEYWAITING, keys.empty() ? false : false);
+	YamlSaveHelper::Label state(yamlSaveHelper, "%s:\n", KeybGetSnapshotStructName().c_str());
+	yamlSaveHelper.SaveHexUint8(SS_YAML_KEY_LASTKEY, keycode);
+	yamlSaveHelper.SaveBool(SS_YAML_KEY_KEYWAITING, keys.empty() ? false : false);
 }
 
 void KeybLoadSnapshot(YamlLoadHelper &yamlLoadHelper, UINT version)
 {
-    if (!yamlLoadHelper.GetSubMap(KeybGetSnapshotStructName()))
-        return;
+	if (!yamlLoadHelper.GetSubMap(KeybGetSnapshotStructName()))
+		return;
 
-    keycode = (BYTE)yamlLoadHelper.LoadUint(SS_YAML_KEY_LASTKEY);
+	keycode = (BYTE)yamlLoadHelper.LoadUint(SS_YAML_KEY_LASTKEY);
 
-    bool keywaiting = false;
-    if (version >= 2)
-        keywaiting = yamlLoadHelper.LoadBool(SS_YAML_KEY_KEYWAITING);
+	bool keywaiting = false;
+	if (version >= 2)
+		keywaiting = yamlLoadHelper.LoadBool(SS_YAML_KEY_KEYWAITING);
 
-    keys = std::queue<BYTE>();
-    addKeyToBuffer(keycode);
+	keys = std::queue<BYTE>();
+	addKeyToBuffer(keycode);
 
-    yamlLoadHelper.PopMap();
+	yamlLoadHelper.PopMap();
 }
 
 void KeybReset()
 {
-    keycode = 0;
-    std::queue<BYTE>().swap(keys);
+	keycode = 0;
+	std::queue<BYTE>().swap(keys);
 }
 
 bool KeybGetShiftStatus()
 {
-    return false;
+	return false;
 }
 
 bool KeybGetAltStatus()
 {
-    return false;
+	return false;
 }
 
 bool KeybGetCtrlStatus()
 {
-    return false;
+	return false;
 }
 
 BYTE KeybClearStrobe(void)
 {
-    if (keys.empty())
-    {
-        return 0;
-    }
-    else
-    {
-        const BYTE result = keys.front();
-        keys.pop();
-        return result | 0x80;
-    }
-}
+	if (keys.empty())
+	{
+		return 0;
