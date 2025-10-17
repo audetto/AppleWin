@@ -153,3 +153,11 @@ BYTE KeybClearStrobe(void)
 	if (keys.empty())
 	{
 		return 0;
+	}
+	else
+	{
+		const BYTE result = keys.front();
+		keys.pop();
+		return result | 0x80;
+	}
+}
