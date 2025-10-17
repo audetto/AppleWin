@@ -40,19 +40,19 @@ void addKeyToBuffer(BYTE key)
 
 void addTextToBuffer(const char *text)
 {
-	while (*text)
-	{
-		if (*text == '\n')
-		{
-			addKeyToBuffer(0x0d);
-		}
-		else if (*text >= 0x20 && *text <= 0x7e)
-		{
-			addKeyToBuffer(*text);
-		}
-		// skip non ASCII characters
-		++text;
-	}
+    while (*text)
+    {
+        if (*text == '\n')
+        {
+            addKeyToBuffer(0x0d);
+        }
+        else if (*text >= 0x20 && *text <= 0x7e)
+        {
+            addKeyToBuffer(*text);
+        }
+        // skip non ASCII characters
+        ++text;
+    }
 }
 
 void KeybSetAltGrSendsWM_CHAR(bool state)
