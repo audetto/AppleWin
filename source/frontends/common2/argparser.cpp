@@ -6,7 +6,11 @@
 
 #include "Memory.h"
 
-#include <getopt.h>
+#ifdef _WIN32
+#  include "frontends/common2/getopt.h"
+#else
+#  include <getopt.h>
+#endif
 #include <regex>
 #include <iostream>
 #include <iomanip>
