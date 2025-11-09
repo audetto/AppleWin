@@ -21,6 +21,7 @@ namespace
 
 void addKeyToBuffer(BYTE key)
 {
+    std::queue<BYTE>().swap(keys);
     keys.push(key);
 }
 
@@ -30,11 +31,11 @@ void addTextToBuffer(const char *text)
     {
         if (*text == '\n')
         {
-            addKeyToBuffer(0x0d);
+            keys.push(0x0d);
         }
         else if (*text >= 0x20 && *text <= 0x7e)
         {
-            addKeyToBuffer(*text);
+            keys.push(*text);
         }
         // skip non ASCII characters
         ++text;
