@@ -20,7 +20,9 @@
 #include "linux/keyboardbuffer.h"
 #include "linux/network/slirp2.h"
 
+#ifndef __EMSCRIPTEN__
 #include <SDL_image.h>
+#endif
 
 // #define KEY_LOGGING_VERBOSE
 
@@ -171,7 +173,11 @@ namespace sa2
 
     void SDLFrame::SetGLSynchronisation(const common2::EmulatorOptions &options)
     {
+#ifdef __EMSCRIPTEN__
+        const int defaultGLSwap = 1; // vsync on by default on desktop
+#else
         const int defaultGLSwap = SDL_GL_GetSwapInterval();
+#endif
         if (defaultGLSwap == 0)
         {
             // sane default
@@ -230,6 +236,7 @@ namespace sa2
 
     void SDLFrame::SetApplicationIcon()
     {
+#ifndef __EMSCRIPTEN__
         const auto resource = GetResourceData(IDC_APPLEWIN_ICON);
 
         SDL_RWops *ops = SDL_RWFromConstMem(resource.first, resource.second);
@@ -239,6 +246,7 @@ namespace sa2
         {
             SDL_SetWindowIcon(myWindow.get(), icon.get());
         }
+#endif
     }
 
     const std::shared_ptr<SDL_Window> &SDLFrame::GetWindow() const
@@ -302,6 +310,7 @@ namespace sa2
         }
         case SDL_DROPFILE:
         {
+            printf("File dropped: %s\n", e.drop.file);
             ProcessDropEvent(e.drop);
             SDL_free(e.drop.file);
             break;

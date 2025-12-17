@@ -829,13 +829,18 @@ namespace sa2
 
             int nMajor, nMinor, nFixMajor, nFixMinor;
             UnpackVersion(DEBUGGER_VERSION, nMajor, nMinor, nFixMajor, nFixMinor);
-            ImGui::Text("Debugger %d.%d.%d.%d", nMajor, nMinor, nFixMajor, nFixMinor);
+            ImGui::Text("Debugger: %d.%d.%d.%d", nMajor, nMinor, nFixMajor, nFixMinor);
 
             ImGui::Separator();
             SDL_version sdl;
             SDL_GetVersion(&sdl);
-            ImGui::Text("SDL version %d.%d.%d", sdl.major, sdl.minor, sdl.patch);
-            ImGui::Text("Dear ImGui %s", ImGui::GetVersion());
+            ImGui::Text("SDL: %d.%d.%d", sdl.major, sdl.minor, sdl.patch);
+            ImGui::Text("Dear ImGui: %s", ImGui::GetVersion());
+            const char *str = reinterpret_cast<const char *>(glGetString(GL_VERSION));
+            if (str)
+            {
+                ImGui::Text("GL_VERSION: %s", str);
+            }
 
             ImGui::Separator();
             const int glSwap = SDL_GL_GetSwapInterval();

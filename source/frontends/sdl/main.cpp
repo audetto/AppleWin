@@ -24,6 +24,10 @@
 #include "NTSC.h"
 #include "Interface.h"
 
+#ifdef __EMSCRIPTEN__
+#include "examples/libs/emscripten/emscripten_mainloop_stub.h"
+#endif
+
 // comment out to test / debug init / shutdown only
 #define EMULATOR_RUN
 
@@ -51,7 +55,84 @@ namespace
         common2::Timer *timer;
     };
 
+    class MainLoop
+    {
+    public:
+        MainLoop(std::shared_ptr<sa2::SDLFrame> &aframe, common2::EmulatorOptions aoptions, const int fps)
+            : frame(aframe)
+            , options(aoptions)
+            , oneFrameMicros(1000000 / fps)
+        {
+        }
+
+        ~MainLoop()
+        {
+            // printf("%s:%d\n", __FILE__, __LINE__);
+        }
+
+        void loop()
+        {
+            frameTimer.tic();
+
+            eventTimer.tic();
+            frame->ProcessEvents(quit);
+            eventTimer.toc();
+
+            cpuTimer.tic();
+            frame->ExecuteOneFrame(oneFrameMicros);
+            cpuTimer.toc();
+
+            if (!options.headless)
+            {
+                refreshScreenTimer.tic();
+                if (g_bFullSpeed)
+                {
+                    frame->VideoRedrawScreenDuringFullSpeed(g_dwCyclesThisFrame);
+                }
+                else
+                {
+                    frame->SyncVideoPresentScreen(oneFrameMicros);
+                }
+                refreshScreenTimer.toc();
+            }
+
+            frameTimer.toc();
+        }
+
+        void end()
+        {
+            global.toc();
+
+            std::cerr << "Global:  " << global << std::endl;
+            std::cerr << "Frame:   " << frameTimer << std::endl;
+            std::cerr << "Screen:  " << refreshScreenTimer << std::endl;
+            std::cerr << "Events:  " << eventTimer << std::endl;
+            std::cerr << "CPU:     " << cpuTimer << std::endl;
+        }
+
+        bool isQuit() const
+        {
+            return quit || frame->Quit();
+        }
+
+    private:
+        const std::shared_ptr<sa2::SDLFrame> frame;
+        const common2::EmulatorOptions options;
+        const int64_t oneFrameMicros;
+        bool quit = false;
+
+        common2::Timer global;
+        common2::Timer refreshScreenTimer;
+        common2::Timer cpuTimer;
+        common2::Timer eventTimer;
+        common2::Timer frameTimer;
+    };
+
+    std::unique_ptr<MainLoop> mainLoopPtr;
+
 } // namespace
+
+extern "C" void init_dragdrop();
 
 void run_sdl(int argc, char *const argv[])
 {
@@ -84,6 +165,12 @@ void run_sdl(int argc, char *const argv[])
         frame = std::make_shared<sa2::SDLRendererFrame>(options);
     }
 
+#ifdef __EMSCRIPTEN__
+    SDL_SetHint(SDL_HINT_EMSCRIPTEN_KEYBOARD_ELEMENT, "#canvas");
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
+    init_dragdrop();
+#endif
+
     std::cerr << "Default GL swap interval: " << SDL_GL_GetSwapInterval() << std::endl;
 
     const common2::CommonInitialisation init(frame, paddle, options);
@@ -112,56 +199,33 @@ void run_sdl(int argc, char *const argv[])
     }
     else
     {
-        common2::Timer global;
-        common2::Timer refreshScreenTimer;
-        common2::Timer cpuTimer;
-        common2::Timer eventTimer;
-        common2::Timer frameTimer;
-
-        const std::string globalTag = ". .";
-        std::string updateTextureTimerTag, refreshScreenTimerTag, cpuTimerTag, eventTimerTag;
-
-        // it does not need to be exact
-        const int64_t oneFrameMicros = 1000000 / fps;
-
-        bool quit = false;
-
-        do
+        mainLoopPtr = std::make_unique<MainLoop>(frame, options, fps);
+#ifdef __EMSCRIPTEN__
+        EMSCRIPTEN_MAINLOOP_BEGIN
+#else
+        while (!mainLoopPtr->isQuit())
+#endif
         {
-            frameTimer.tic();
-
-            eventTimer.tic();
-            frame->ProcessEvents(quit);
-            eventTimer.toc();
-
-            cpuTimer.tic();
-            frame->ExecuteOneFrame(oneFrameMicros);
-            cpuTimer.toc();
-
-            if (!options.headless)
+#ifdef __EMSCRIPTEN__
+            if (mainLoopPtr->isQuit())
             {
-                refreshScreenTimer.tic();
-                if (g_bFullSpeed)
-                {
-                    frame->VideoRedrawScreenDuringFullSpeed(g_dwCyclesThisFrame);
-                }
-                else
-                {
-                    frame->SyncVideoPresentScreen(oneFrameMicros);
-                }
-                refreshScreenTimer.toc();
+                emscripten_cancel_main_loop();
             }
-
-            frameTimer.toc();
-        } while (!quit && !frame->Quit());
-
-        global.toc();
-
-        std::cerr << "Global:  " << global << std::endl;
-        std::cerr << "Frame:   " << frameTimer << std::endl;
-        std::cerr << "Screen:  " << refreshScreenTimer << std::endl;
-        std::cerr << "Events:  " << eventTimer << std::endl;
-        std::cerr << "CPU:     " << cpuTimer << std::endl;
+#endif
+            try
+            {
+                mainLoopPtr->loop();
+            }
+            catch (const std::exception &e)
+            {
+                std::cerr << "Exception caught in main loop: " << e.what() << std::endl;
+            }
+        }
+#ifdef __EMSCRIPTEN__
+        EMSCRIPTEN_MAINLOOP_END;
+#endif
+        mainLoopPtr->end();
+        mainLoopPtr.reset();
     }
 #endif
 }

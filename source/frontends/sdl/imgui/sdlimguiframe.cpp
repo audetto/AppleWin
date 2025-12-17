@@ -100,6 +100,18 @@ namespace sa2
         ImGui::CreateContext();
         ImGuiIO &io = ImGui::GetIO();
 
+        int w, h;
+        SDL_GL_GetDrawableSize(myWindow.get(), &w, &h);
+        if (w <= 0 || h <= 0)
+        {
+            w = 100;
+            h = 100;
+        }
+
+        io.DisplaySize = ImVec2((float)w, (float)h);
+        io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
+        io.FontGlobalScale = 1.0f;
+
         ImFontConfig fontConfig;
         fontConfig.FontDataOwnedByAtlas = false;
 
@@ -239,6 +251,11 @@ namespace sa2
         if (!myPresenting)
         {
             myPresenting = true;
+
+            int w, h;
+            SDL_GL_GetDrawableSize(myWindow.get(), &w, &h);
+            glViewport(0, 0, w, h);
+
             ImGui_ImplOpenGL3_NewFrame();
             ImGui_ImplSDL2_NewFrame();
             ImGui::NewFrame();

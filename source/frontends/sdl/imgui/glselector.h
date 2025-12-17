@@ -1,6 +1,19 @@
 #pragma once
 
-#if defined(IMGUI_IMPL_OPENGL_ES2)
+#if defined __EMSCRIPTEN__
+
+#include <GLES3/gl3.h>
+
+#define SA2_CONTEXT_FLAGS 0
+#define SA2_CONTEXT_PROFILE_MASK SDL_GL_CONTEXT_PROFILE_ES
+#define SA2_CONTEXT_MAJOR_VERSION 3
+#define SA2_CONTEXT_MINOR_VERSION 0
+
+// this is defined in gl2ext.h and nowhere in gl3.h
+#define SA2_IMAGE_FORMAT_INTERNAL GL_RGBA8
+#define SA2_IMAGE_FORMAT GL_RGBA
+
+#elif defined(IMGUI_IMPL_OPENGL_ES2)
 
 // Pi3 with Fake KMS
 // "OpenGL ES 2.0 Mesa 19.3.2"
@@ -15,7 +28,7 @@
 #define SA2_CONTEXT_MINOR_VERSION 0
 
 // this is defined in gl2ext.h and nowhere in gl3.h
-#define SA2_IMAGE_FORMAT_INTERNAL GL_BGRA_EXT
+#define SA2_IMAGE_FORMAT_INTERNAL GL_RGBA
 #define SA2_IMAGE_FORMAT GL_BGRA_EXT
 
 #elif defined(IMGUI_IMPL_OPENGL_ES3)
@@ -31,7 +44,14 @@
 // "310 es" is accepted on a Pi4, but the imgui shaders do not compile
 
 #include <GLES3/gl3.h>
-#include <GLES2/gl2ext.h>
+
+#ifndef GL_BGRA
+#ifdef GL_BGRA_EXT
+#define GL_BGRA GL_BGRA_EXT
+#else
+#define GL_BGRA 0x80E1
+#endif
+#endif
 
 #define SA2_CONTEXT_FLAGS 0
 #define SA2_CONTEXT_PROFILE_MASK SDL_GL_CONTEXT_PROFILE_ES
@@ -39,8 +59,8 @@
 #define SA2_CONTEXT_MINOR_VERSION 0
 
 // this is defined in gl2ext.h and nowhere in gl3.h
-#define SA2_IMAGE_FORMAT_INTERNAL GL_BGRA_EXT
-#define SA2_IMAGE_FORMAT GL_BGRA_EXT
+#define SA2_IMAGE_FORMAT_INTERNAL GL_RGBA8
+#define SA2_IMAGE_FORMAT GL_BGRA
 
 #elif defined(__APPLE__)
 
@@ -51,7 +71,7 @@
 #define SA2_CONTEXT_MAJOR_VERSION 3
 #define SA2_CONTEXT_MINOR_VERSION 2
 
-#define SA2_IMAGE_FORMAT_INTERNAL GL_RGBA
+#define SA2_IMAGE_FORMAT_INTERNAL GL_RGBA8
 #define SA2_IMAGE_FORMAT GL_BGRA
 
 #else
@@ -63,7 +83,7 @@
 #define SA2_CONTEXT_MAJOR_VERSION 3
 #define SA2_CONTEXT_MINOR_VERSION 2
 
-#define SA2_IMAGE_FORMAT_INTERNAL GL_RGBA
+#define SA2_IMAGE_FORMAT_INTERNAL GL_RGBA8
 #define SA2_IMAGE_FORMAT GL_BGRA
 
 #endif

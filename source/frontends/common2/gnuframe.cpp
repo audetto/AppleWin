@@ -76,8 +76,10 @@ namespace common2
         : CommonFrame(options)
     {
         // should this go down to LinuxFrame (maybe Initialisation?)
+#ifndef __EMSCRIPTEN__
         g_sProgramDir = getResourceFolder("bin").string() + PATH_SEPARATOR;
         LogFileOutput("Program Dir: '%s'\n", g_sProgramDir.c_str());
+#endif
     }
 
     std::pair<const unsigned char *, unsigned int> GNUFrame::GetResourceData(WORD id) const
