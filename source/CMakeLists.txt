@@ -1,6 +1,6 @@
 include(FindPkgConfig)
 
-if (NOT WIN32)
+if (NOT WIN32 AND NOT IOS)
   pkg_search_module(SLIRP slirp)
 
   # if slirp is not found, we will try pcap
@@ -272,6 +272,8 @@ endif()
 target_link_libraries(appleii PUBLIC
   yaml
   minizip
+  ${PCAP_LIBRARIES}
+  ${SLIRP_LIBRARIES}
   )
 
 target_link_directories(appleii PUBLIC
