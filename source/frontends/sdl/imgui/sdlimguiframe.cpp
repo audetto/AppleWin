@@ -100,12 +100,28 @@ namespace sa2
         ImGui::CreateContext();
         ImGuiIO &io = ImGui::GetIO();
 
-        io.Fonts->AddFontDefault();
-        const auto debug6502TTF = GetResourceData(IDB_DEBUG_FONT_7_by_8);
+        int w, h;
+        SDL_GL_GetDrawableSize(myWindow.get(), &w, &h);
+        if (w <= 0 || h <= 0)
+        {
+            w = 100;
+            h = 100;
+        }
+
+        io.DisplaySize = ImVec2((float)w, (float)h);
+        io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
+        io.FontGlobalScale = 1.0f;
+
         ImFontConfig fontConfig;
         fontConfig.FontDataOwnedByAtlas = false;
+
+        const auto cousinTTF = GetResourceData(IDB_IMGUI_FONT_COUSIN);
+        io.Fonts->AddFontFromMemoryTTF(
+            const_cast<unsigned char *>(cousinTTF.first), cousinTTF.second, 18.0f, &fontConfig);
+
+        const auto debug6502TTF = GetResourceData(IDB_DEBUG_FONT_7_by_8);
         myDebuggerFont = io.Fonts->AddFontFromMemoryTTF(
-            const_cast<unsigned char *>(debug6502TTF.first), debug6502TTF.second, 13, &fontConfig);
+            const_cast<unsigned char *>(debug6502TTF.first), debug6502TTF.second, 13.0f, &fontConfig);
 
         myIniFileLocation = common2::getConfigFile("imgui.ini").string();
         if (myIniFileLocation.empty())
@@ -235,6 +251,11 @@ namespace sa2
         if (!myPresenting)
         {
             myPresenting = true;
+
+            int w, h;
+            SDL_GL_GetDrawableSize(myWindow.get(), &w, &h);
+            glViewport(0, 0, w, h);
+
             ImGui_ImplOpenGL3_NewFrame();
             ImGui_ImplSDL2_NewFrame();
             ImGui::NewFrame();

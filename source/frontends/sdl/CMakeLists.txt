@@ -6,9 +6,11 @@ add_executable(sa2)
 set(IMGUI_PATH "imgui/imgui")
 set(IMGUI_CLUB_PATH "imgui/imgui_club")
 
-find_package(SDL2 REQUIRED)
-# we should use find_package, but Ubuntu does not provide it for SDL2_image
-pkg_search_module(SDL2_IMAGE REQUIRED SDL2_image)
+if (NOT EMSCRIPTEN)
+  find_package(SDL2 REQUIRED)
+  # we should use find_package, but Ubuntu does not provide it for SDL2_image
+  pkg_search_module(SDL2_IMAGE REQUIRED SDL2_image)
+endif()
 
 
 if ((${CMAKE_SYSTEM_NAME} MATCHES "Darwin") OR (${CMAKE_SYSTEM_NAME} MATCHES "Windows"))
@@ -29,6 +31,7 @@ endif()
 
 
 set(SOURCE_FILES
+  em_js.cpp
   main.cpp
   gamepad.cpp
   sdirectsound.cpp
@@ -94,7 +97,7 @@ target_sources(sa2 PRIVATE
   imgui/sdlsettings.h
   imgui/sdldebugger.h
   imgui/sdlmemory.h
-  imgui/imconfig.h
+  imgui/sa2_imconfig.h
   imgui/glselector.h
   imgui/inputtexthistory.h
   imgui/cycletabitems.h
@@ -118,8 +121,31 @@ target_include_directories(sa2 PRIVATE
   )
 
 target_compile_definitions(sa2 PRIVATE
-  IMGUI_USER_CONFIG="frontends/sdl/imgui/imconfig.h"
+  IMGUI_USER_CONFIG="frontends/sdl/imgui/sa2_imconfig.h"
   )
+
+if (EMSCRIPTEN)
+  set_target_properties(sa2 PROPERTIES
+    SUFFIX ".html"
+    )
+
+  target_compile_options(sa2 PRIVATE
+    --use-port=sdl2
+    )
+
+  set(EMSC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/emsc)
+
+  target_link_options(sa2 PRIVATE
+    --use-port=sdl2
+    -sFULL_ES3=1
+    -sMIN_WEBGL_VERSION=2
+    "SHELL:-lidbfs.js"
+    "SHELL:--pre-js ${EMSC_DIR}/src/fs.js"
+    "SHELL:--pre-js ${EMSC_DIR}/src/dragdrop.js"
+    "SHELL:--shell-file ${EMSC_DIR}/src/a2e.html"
+    "SHELL:--preload-file ${EMSC_DIR}/fs@/"
+  )
+endif()
 
 install(TARGETS sa2
   DESTINATION bin)

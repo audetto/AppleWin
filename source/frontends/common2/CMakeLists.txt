@@ -13,7 +13,6 @@ set(SOURCE_FILES
   timer.cpp
   speed.cpp
   yamlmap.cpp
-  yamlselftest.cpp
   )
 
 set(HEADER_FILES
