@@ -133,14 +133,18 @@ if (EMSCRIPTEN)
     --use-port=sdl2
     )
 
+  set(EMSC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/emsc)
+
   target_link_options(sa2 PRIVATE
     --use-port=sdl2
     -sFULL_ES3=1
     -sMIN_WEBGL_VERSION=2
-    -sEXPORTED_RUNTIME_METHODS=[]
-    --shell-file ${CMAKE_SOURCE_DIR}/source/frontends/sdl/a2e.html
-    --preload-file ${CMAKE_SOURCE_DIR}/source/frontends/sdl/emsc@/home/web_user
-    )
+    "SHELL:-lidbfs.js"
+    "SHELL:--pre-js ${EMSC_DIR}/src/fs.js"
+    "SHELL:--pre-js ${EMSC_DIR}/src/dragdrop.js"
+    "SHELL:--shell-file ${EMSC_DIR}/src/a2e.html"
+    "SHELL:--preload-file ${EMSC_DIR}/fs@/"
+  )
 endif()
 
 install(TARGETS sa2
