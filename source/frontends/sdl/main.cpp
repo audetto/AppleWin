@@ -132,8 +132,6 @@ namespace
 
 } // namespace
 
-extern "C" void init_dragdrop();
-
 void run_sdl(int argc, char *const argv[])
 {
     common2::EmulatorOptions options;
@@ -168,7 +166,6 @@ void run_sdl(int argc, char *const argv[])
 #ifdef __EMSCRIPTEN__
     SDL_SetHint(SDL_HINT_EMSCRIPTEN_KEYBOARD_ELEMENT, "#canvas");
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
-    init_dragdrop();
 #endif
 
     std::cerr << "Default GL swap interval: " << SDL_GL_GetSwapInterval() << std::endl;
@@ -230,7 +227,7 @@ void run_sdl(int argc, char *const argv[])
 #endif
 }
 
-int main(int argc, char *argv[])
+int app_main(int argc, char *argv[])
 {
     // First we need to start up SDL, and make sure it went ok
     const Uint32 flags = SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER | SDL_INIT_AUDIO | SDL_INIT_TIMER | SDL_INIT_EVENTS;
@@ -256,3 +253,15 @@ int main(int argc, char *argv[])
 
     return exit;
 }
+
+#ifdef __EMSCRIPTEN__
+extern "C" EMSCRIPTEN_KEEPALIVE void on_fs_ready()
+{
+    app_main(0, nullptr);
+}
+#else
+int main(int argc, char *argv[])
+{
+    return app_main(argc, argv);
+}
+#endif

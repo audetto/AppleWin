@@ -12,10 +12,10 @@ Configuration\Slot 3:
   Uthernet Interface:
 Configuration\Slot 6:
   Card type: 1
-  Last Disk Image 1: /home/web_user/disks/DOS 3.3 System Master - 680-0210-A.dsk
-  Last Disk Image 2: /home/web_user/disks/ProDOS_2_4_3.po
+  Last Disk Image 1: /disks/DOS 3.3 System Master - 680-0210-A.dsk
+  Last Disk Image 2: /disks/ProDOS_2_4_3.po
 Configuration\Slot Auxiliary:
   Card type: 13
   Number of Banks: 1
 Preferences:
-  Starting Directory: /home/web_user/disks/
+  Starting Directory: /disks/

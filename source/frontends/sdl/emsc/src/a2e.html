@@ -3,9 +3,8 @@
 
 <head>
   <meta charset="utf-8">
-  <title>Your App</title>
+  <title>AppleWin Emscripten</title>
   <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0">
-
   <style>
     html,
     body {
@@ -30,12 +29,26 @@
   <canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas>
 
   <script>
+    // Module setup before Emscripten runtime
     var Module = {
-      canvas: document.getElementById('canvas')
+      canvas: document.getElementById('canvas'),
+      ENV: { XDG_CONFIG_HOME: '/persist/.config' },
+
+      onRuntimeInitialized: function () {
+        console.log('[Module] Runtime ready');
+
+        // Init persistent filesystem
+        Module.js_init_fs();
+
+        // Init drag & drop (pure JS)
+        Module.init_dragdrop();
+      }
     };
   </script>
 
+  <!-- Emscripten-generated JS goes here -->
   {{{ SCRIPT }}}
+
 </body>
 
 </html>
