@@ -26,6 +26,7 @@ namespace
     constexpr int MEM_CLEAR = 1008;
     constexpr int ROM = 1009;
     constexpr int F8ROM = 1010;
+    constexpr int VIDEOROM = 1026;
 
     constexpr int NO_AUDIO = 1011;
     constexpr int AUDIO_BUFFER = 1012;
@@ -180,7 +181,7 @@ namespace common2
                  {"d1",                      required_argument,    '1',              "Disk in S6D1 drive"},
                  {"d2",                      required_argument,    '2',              "Disk in S6D2 drive"},
                  {"h1",                      required_argument,    DISK_H1,          "Hard Disk in 1st drive"},
-                 {"h2",                      required_argument,    DISK_H2,          "Hard Disk in 2nd drive"},
+                 {"h2",                      required_argument,    DISK_H2,          "Hard Disk in 1st drive"},
              }},
             {"Snapshot",
              {
@@ -192,6 +193,7 @@ namespace common2
                  {"memclear",                required_argument,    MEM_CLEAR,        "Memory initialization pattern [0..7]"},
                  {"rom",                     required_argument,    ROM,              "Custom 12k/16k ROM"},
                  {"f8rom",                   required_argument,    F8ROM,            "Custom 2k ROM"},
+                 {"videorom",                required_argument,    VIDEOROM,         "Custom Video ROM"},
              }},
             {"Audio",
              {
@@ -251,7 +253,7 @@ namespace common2
             {
                 if (optind < argc)
                 {
-                    std::cerr << "Unexpected positional argument: '" << argv[optind] << "'" << std::endl << std::endl;
+                    std::cerr << "Uexpected positional argument: '" << argv[optind] << "'" << std::endl << std::endl;
                     printHelp(allOptions);
                     return false;
                 }
@@ -362,6 +364,11 @@ namespace common2
             case F8ROM:
             {
                 options.customRomF8 = optarg;
+                break;
+            }
+            case VIDEOROM:
+            {
+                options.customRomVideo = optarg;
                 break;
             }
             case NO_AUDIO:
