@@ -21,6 +21,10 @@
 #include "linux/keyboardbuffer.h"
 #include "linux/network/slirp2.h"
 
+#ifndef __EMSCRIPTEN__
+#include <SDL_image.h>
+#endif
+
 #include <algorithm>
 
 // #define KEY_LOGGING_VERBOSE
@@ -241,6 +245,7 @@ namespace sa2
 
     void SDLFrame::SetApplicationIcon()
     {
+#ifndef __EMSCRIPTEN__
         const auto resource = GetResourceData(IDC_APPLEWIN_ICON);
 
         std::shared_ptr<SDL_Surface> icon(
@@ -249,6 +254,7 @@ namespace sa2
         {
             SDL_SetWindowIcon(myWindow.get(), icon.get());
         }
+#endif
     }
 
     const std::shared_ptr<SDL_Window> &SDLFrame::GetWindow() const
@@ -418,6 +424,7 @@ namespace sa2
     void SDLFrame::ProcessDropEvent(const SDL_DropEvent &drop)
     {
         const auto file = SA2_DROP_FILE(drop);
+        printf("File dropped: %s\n", file);
         processFile(this, file, myDragAndDropSlot, myDragAndDropDrive);
         sa2::compat::maybeSDLfree(file);
     }

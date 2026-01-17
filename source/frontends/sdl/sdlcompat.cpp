@@ -100,6 +100,7 @@ namespace sa2
             return renderer;
         }
 
+#ifndef __EMSCRIPTEN__
         SDL_Surface *createSurfaceFromResource(const unsigned char *data, unsigned int size)
         {
             SDL_IOStream *ops = SDL_IOFromConstMem(data, size);
@@ -114,6 +115,7 @@ namespace sa2
             }
             return surface;
         }
+#endif
 
         bool convertAudio(
             const SDL_AudioSpec &wavSpec, const Uint8 *wavBuffer, const Uint32 wavLength, std::vector<int8_t> &output)

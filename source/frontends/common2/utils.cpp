@@ -5,15 +5,29 @@
 #include "SaveState.h"
 #include "Registry.h"
 
+#include <iostream>
+
 namespace
 {
 
-    std::string getEnvOrDefault(const char *var, const char *fallback = nullptr)
+    std::optional<std::string> tryGetEnv(const char *var)
     {
         const char *value = getenv(var);
         if (value)
         {
-            return value;
+            std::cout << "Environment variable " << var << " = " << value << std::endl;
+            return std::string(value);
+        }
+        std::cout << "Environment variable " << var << " missing" << std::endl;
+        return std::nullopt;
+    }
+
+    std::string getEnvOrDefault(const char *var, const char *fallback = nullptr)
+    {
+        std::optional<std::string> value = tryGetEnv(var);
+        if (value.has_value())
+        {
+            return *value;
         }
         if (fallback)
         {
@@ -34,10 +48,18 @@ namespace common2
         return profile;
 #else
         // https://specifications.freedesktop.org/basedir-spec/latest/
-        const std::filesystem::path home = getHomeDir();
-        const std::filesystem::path config = getEnvOrDefault("XDG_CONFIG_HOME", ".config");
+#ifdef __EMSCRIPTEN__
+        const std::optional<std::string> xdgConfigHome = "/defaults/.config";
+#else
+        const std::optional<std::string> xdgConfigHome = tryGetEnv("XDG_CONFIG_HOME");
+#endif
+        if (xdgConfigHome.has_value())
+        {
+            return *xdgConfigHome;
+        }
 
-        return home / config;
+        const std::filesystem::path home = getHomeDir();
+        return home / ".config";
 #endif
     }
 

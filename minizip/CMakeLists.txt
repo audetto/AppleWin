@@ -15,10 +15,12 @@ target_include_directories(minizip INTERFACE
   ${CMAKE_CURRENT_SOURCE_DIR}/..
   )
 
-# use 32‑bit file API to fix Android compilation issue
-target_compile_definitions(minizip PUBLIC
-  -DUSE_FILE32API
-)
+if (NOT EMSCRIPTEN)
+  # use 32‑bit file API to fix Android compilation issue
+  target_compile_definitions(minizip PUBLIC
+    -DUSE_FILE32API
+    )
+endif()
 
 target_link_libraries(minizip PUBLIC
   zlib2

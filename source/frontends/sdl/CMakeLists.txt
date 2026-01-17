@@ -10,13 +10,16 @@ option(SA2_SDL3 "Use SDL3" OFF)
 
 if (SA2_SDL3)
   message("sa2: using SDL3")
-  find_package(SDL3 REQUIRED)
-  find_package(SDL3_image REQUIRED)
 
-  target_link_libraries(sa2 PRIVATE
-    SDL3::SDL3
-    SDL3_image::SDL3_image
-  )
+  if (NOT EMSCRIPTEN)
+    find_package(SDL3 REQUIRED)
+    find_package(SDL3_image REQUIRED)
+
+    target_link_libraries(sa2 PRIVATE
+      SDL3::SDL3
+      SDL3_image::SDL3_image
+    )
+  endif()
 
   target_sources(sa2 PRIVATE
     ${IMGUI_PATH}/backends/imgui_impl_sdl3.cpp
@@ -25,6 +28,11 @@ if (SA2_SDL3)
   target_compile_definitions(sa2 PRIVATE SDL_ENABLE_OLD_NAMES)
 else()
   message("sa2: using SDL2")
+
+  if (EMSCRIPTEN)
+    message(FATAL_ERROR "Emscripten only supports SDL3")
+  endif()
+
   find_package(SDL2 REQUIRED)
   # we should use find_package, but Ubuntu does not provide it for SDL2_image
   pkg_search_module(SDL2_IMAGE REQUIRED SDL2_image)
@@ -67,6 +75,7 @@ endif()
 
 
 set(SOURCE_FILES
+  em_js.cpp
   main.cpp
   gamepad.cpp
   sdirectsound.cpp
@@ -153,6 +162,29 @@ target_include_directories(sa2 PRIVATE
 target_compile_definitions(sa2 PRIVATE
   IMGUI_USER_CONFIG="frontends/sdl/imgui/sa2_imconfig.h"
   )
+
+if (EMSCRIPTEN)
+  set_target_properties(sa2 PROPERTIES
+    SUFFIX ".html"
+    )
+
+  target_compile_options(sa2 PRIVATE
+    -sUSE_SDL=3
+    )
+
+  set(EMSC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/emsc)
+
+  target_link_options(sa2 PRIVATE
+    -sUSE_SDL=3
+    -sFULL_ES3=1
+    -sMIN_WEBGL_VERSION=2
+    "SHELL:-lidbfs.js"
+    "SHELL:--pre-js ${EMSC_DIR}/src/fs.js"
+    "SHELL:--pre-js ${EMSC_DIR}/src/dragdrop.js"
+    "SHELL:--shell-file ${EMSC_DIR}/src/a2e.html"
+    "SHELL:--preload-file ${EMSC_DIR}/fs@/"
+  )
+endif()
 
 configure_file(sa2_config.h.in sa2_config.h)
 
