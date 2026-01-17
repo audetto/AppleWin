@@ -175,4 +175,4 @@
 #endif
 
 // Added manually, to avoid conflicts
-#define IDB_IMGUI_FONT_COUSIN           2000
+#define IDB_IMGUI_FONT_COUSINE          10001

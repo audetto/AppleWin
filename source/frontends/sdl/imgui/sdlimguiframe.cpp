@@ -115,9 +115,9 @@ namespace sa2
         ImFontConfig fontConfig;
         fontConfig.FontDataOwnedByAtlas = false;
 
-        const auto cousinTTF = GetResourceData(IDB_IMGUI_FONT_COUSIN);
+        const auto cousineTTF = GetResourceData(IDB_IMGUI_FONT_COUSINE);
         io.Fonts->AddFontFromMemoryTTF(
-            const_cast<unsigned char *>(cousinTTF.first), cousinTTF.second, 18.0f, &fontConfig);
+            const_cast<unsigned char *>(cousineTTF.first), cousineTTF.second, 18.0f, &fontConfig);
 
         const auto debug6502TTF = GetResourceData(IDB_DEBUG_FONT_7_by_8);
         myDebuggerFont = io.Fonts->AddFontFromMemoryTTF(

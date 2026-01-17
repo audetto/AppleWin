@@ -38,7 +38,7 @@ add_resources(source_files apple2roms
   IDC_APPLEWIN_ICON                   "APPLEWIN.ICO"
 
   IDB_DEBUG_FONT_7_by_8               "debug6502.ttf"
-  IDB_IMGUI_FONT_COUSIN               "../source/frontends/sdl/imgui/imgui/misc/fonts/Cousine-Regular.ttf"
+  IDB_IMGUI_FONT_COUSINE              "Cousine-Regular.ttf"
   )
 
 add_library(apple2roms STATIC
