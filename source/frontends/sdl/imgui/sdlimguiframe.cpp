@@ -238,9 +238,9 @@ namespace sa2
         {
             myPresenting = true;
 
-            int w, h;
-            SDL_GL_GetDrawableSize(myWindow.get(), &w, &h);
-            glViewport(0, 0, w, h);
+            // int w, h;
+            // SDL_GL_GetDrawableSize(myWindow.get(), &w, &h);
+            // glViewport(0, 0, w, h);
 
             ImGui_ImplOpenGL3_NewFrame();
             ImGui_ImplSDLX_NewFrame();

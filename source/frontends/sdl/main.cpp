@@ -157,8 +157,8 @@ void run_sdl(int argc, char *const argv[])
     }
 
 #ifdef __EMSCRIPTEN__
-    SDL_SetHint(SDL_HINT_EMSCRIPTEN_KEYBOARD_ELEMENT, "#canvas");
-    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
+    // SDL_SetHint(SDL_HINT_EMSCRIPTEN_KEYBOARD_ELEMENT, "#canvas");
+    // SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
 #endif
 
     std::cerr << "GL swap interval: " << sa2::compat::getGLSwapInterval() << std::endl;
