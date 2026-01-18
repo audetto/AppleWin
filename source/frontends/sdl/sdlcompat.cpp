@@ -84,12 +84,13 @@ namespace sa2
 
         SDL_Renderer *createRenderer(SDL_Window *window, const int index)
         {
-            // I am not sure whether we should worry about SDL_PROP_RENDERER_CREATE_PRESENT_VSYNC_NUMBER
-            const char *name = index >= 0 ? SDL_GetRenderDriver(index) : nullptr;
-
             SDL_PropertiesID props = SDL_CreateProperties();
             SDL_SetPointerProperty(props, SDL_PROP_RENDERER_CREATE_WINDOW_POINTER, window);
+
+#ifndef __EMSCRIPTEN__
             SDL_SetBooleanProperty(props, SDL_PROP_RENDERER_CREATE_PRESENT_VSYNC_NUMBER, SDL_TRUE);
+#endif
+
             if (index >= 0)
             {
                 SDL_SetStringProperty(props, SDL_PROP_RENDERER_CREATE_NAME_STRING, SDL_GetRenderDriver(index));
@@ -100,6 +101,7 @@ namespace sa2
             return renderer;
         }
 
+#ifndef __EMSCRIPTEN__
         SDL_Surface *createSurfaceFromResource(const unsigned char *data, unsigned int size)
         {
             SDL_IOStream *ops = SDL_IOFromConstMem(data, size);
@@ -114,6 +116,7 @@ namespace sa2
             }
             return surface;
         }
+#endif
 
         bool convertAudio(
             const SDL_AudioSpec &wavSpec, const Uint8 *wavBuffer, const Uint32 wavLength, std::vector<int8_t> &output)

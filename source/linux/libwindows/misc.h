@@ -29,7 +29,9 @@
 #define IDYES 6
 #define IDNO 7
 
+#ifndef EINVAL
 #define EINVAL 22
+#endif
 
 BOOL WINAPI PostMessage(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
 int MessageBox(HWND, const char *, const char *, UINT);

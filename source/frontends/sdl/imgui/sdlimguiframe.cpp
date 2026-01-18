@@ -237,6 +237,17 @@ namespace sa2
         if (!myPresenting)
         {
             myPresenting = true;
+
+            int w, h;
+
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+            SDL_GetWindowSizeInPixels(myWindow.get(), &w, &h);
+#else
+            SDL_GL_GetDrawableSize(myWindow.get(), &w, &h);
+#endif
+
+            glViewport(0, 0, w, h);
+
             ImGui_ImplOpenGL3_NewFrame();
             ImGui_ImplSDLX_NewFrame();
             ImGui::NewFrame();
