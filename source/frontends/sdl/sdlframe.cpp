@@ -21,10 +21,6 @@
 #include "linux/keyboardbuffer.h"
 #include "linux/network/slirp2.h"
 
-#ifndef __EMSCRIPTEN__
-#include <SDL_image.h>
-#endif
-
 #include <algorithm>
 
 // #define KEY_LOGGING_VERBOSE
