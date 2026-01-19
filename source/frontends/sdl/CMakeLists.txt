@@ -74,6 +74,7 @@ set(SOURCE_FILES
   sdlframe.cpp
   processfile.cpp
   sdlcompat.cpp
+  sdlappmain.cpp
   renderer/sdlrendererframe.cpp
   )
 
@@ -84,6 +85,7 @@ set(HEADER_FILES
   sdlframe.h
   processfile.h
   sdlcompat.h
+  sdlappmain.h
   renderer/sdlrendererframe.h
   )
 
