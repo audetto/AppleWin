@@ -824,7 +824,8 @@ namespace sa2
     {
         if (ImGui::Begin("About", &myShowAbout, ImGuiWindowFlags_AlwaysAutoResize))
         {
-            ImGui::TextUnformatted("sa2: Apple ][ emulator for Linux");
+            const char *platform = SDL_GetPlatform();
+            ImGui::Text("sa2: Apple ][ emulator for %s", platform);
             ImGui::Text("Based on AppleWin %s", getVersion().c_str());
 
             int nMajor, nMinor, nFixMajor, nFixMinor;

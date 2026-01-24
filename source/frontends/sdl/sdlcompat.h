@@ -62,6 +62,13 @@ typedef SDL_Rect Renderer_Rect_t;
 typedef SDL_PixelFormatEnum PixelFormat_t;
 typedef int Joystick_t;
 
+enum SDL_AppResult
+{
+    SDL_APP_CONTINUE = 0,
+    SDL_APP_SUCCESS = 1,
+    SDL_APP_FAILURE = 2
+};
+
 #endif
 
 namespace common2

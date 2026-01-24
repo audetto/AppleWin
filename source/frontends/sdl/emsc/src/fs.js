@@ -7,7 +7,9 @@ Module.js_init_fs = function () {
 
   // 1. Mount IDBFS
   console.log('[FS] Mount /persist');
-  FS.mkdir('/persist');
+  if (!FS.analyzePath('/persist').exists) {
+    FS.mkdir('/persist');
+  }
   FS.mount(IDBFS, {}, '/persist');
   console.log('[FS] Mounted /persist');
 

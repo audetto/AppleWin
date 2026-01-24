@@ -268,15 +268,6 @@ namespace sa2
         return IDOK;
     }
 
-    void SDLFrame::ProcessEvents(bool &quit)
-    {
-        SDL_Event e;
-        while (SDL_PollEvent(&e) != 0)
-        {
-            ProcessSingleEvent(e, quit);
-        }
-    }
-
     void SDLFrame::ProcessSingleEvent(const SDL_Event &e, bool &quit)
     {
         switch (e.type)
