@@ -14,8 +14,9 @@ public:
     struct TapeInfo
     {
         std::string_view filename;
-        size_t size;
-        size_t pos;
+        uint32_t duration; // ms
+        uint32_t position; // ms
+        double playbackRate; // seconds per second
         int frequency;
         uint8_t bit;
     };
@@ -23,6 +24,8 @@ public:
     void getTapeInfo(TapeInfo &info) const;
     void eject();
     void rewind();
+
+    void (*playbackRateChangeCallback)(double playbackRate) = 0;
 
     static CassetteTape &instance();
 
@@ -32,9 +35,9 @@ private:
 
     std::vector<tape_data_t> myData;
 
-    int64_t myBaseCycles;
+    int64_t myBaseCycles = -1;
+    bool myReachedEnd = false;
     int myFrequency;
-    bool myIsPlaying = false;
     BYTE myLastBit = 1;     // negative wave
     std::string myFilename; // just for info
 

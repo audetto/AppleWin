@@ -694,16 +694,16 @@ namespace sa2
                     CassetteTape::TapeInfo info;
                     tape.getTapeInfo(info);
 
-                    if (info.size)
+                    if (info.duration)
                     {
-                        const float remaining = float(info.size - (info.pos + 1)) / float(info.frequency);
-                        const float fraction = float(info.pos + 1) / float(info.size);
+                        const float remaining = (info.duration - info.position) / 1000.0;
+                        const float fraction = float(info.position) / float(info.duration);
                         char buf[32];
                         sprintf(buf, "-%.1f s", remaining);
                         const ImU32 color = info.bit ? IM_COL32(200, 0, 0, 100) : IM_COL32(0, 200, 0, 100);
 
                         ImGui::PushStyleColor(ImGuiCol_PlotHistogram, color);
-                        ImGui::ProgressBar(fraction, ImVec2(-FLT_MIN, 0), buf);
+                        ImGui::ProgressBar(fraction, ImVec2(-FLT_MIN, 0), (info.playbackRate > 0) ? buf : "stopped");
                         ImGui::PopStyleColor();
 
                         ImGui::LabelText("Filename", "%s", info.filename.data());
