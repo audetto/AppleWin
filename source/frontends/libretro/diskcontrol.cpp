@@ -66,6 +66,8 @@ namespace ra2
 
     DiskControl::DiskControl()
         : myEjected(true)
+        , myChangingDisks(false)
+        , myChangingDisksDirection(0)
         , myIndex(0)
     {
     }
@@ -398,6 +400,79 @@ namespace ra2
             ourInitialIndex = index;
             ourInitialPath = path;
         }
+    }
+
+    bool DiskControl::handleDiskSwapInputs()
+    {
+        if (ra2::input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L))
+        {
+            /* L1 down */
+            if (!myChangingDisks)
+            {
+                /* disk not ejected, do so now */
+                myChangingDisks = true;
+                setEjectedState(true);
+
+                if (myIndex < myImages.size())
+                {
+                    std::string message = "Ejected " + myImages[myIndex].label;
+                    ra2::display_message(message.c_str());
+                }
+            }
+            else if (getEjectedState()) /* sanity check - make sure disk is ejected */
+            {
+                if (myChangingDisksDirection)
+                {
+                    /* left/right pressed, wait for user to release */
+                    if (!ra2::input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, myChangingDisksDirection))
+                    {
+                        /* let up on left/right button */
+                        myChangingDisksDirection = 0;
+                    }
+                }
+                else
+                {
+                    size_t newIndex = myIndex;
+                    if (ra2::input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT))
+                    {
+                        /* pressed left while holding L1, go to previous disk */
+                        myChangingDisksDirection = RETRO_DEVICE_ID_JOYPAD_LEFT;
+                        newIndex = (newIndex == 0 || newIndex > myImages.size()) ? myImages.size() - 1 : newIndex - 1;
+                    }
+                    else if (ra2::input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_RIGHT))
+                    {
+                        /* pressed right while holding L1, go to next disk */
+                        myChangingDisksDirection = RETRO_DEVICE_ID_JOYPAD_RIGHT;
+                        newIndex = (newIndex + 1) % myImages.size();
+                    }
+
+                    if (newIndex != myIndex)
+                    {
+                        myIndex = newIndex;
+                        std::string message = "Readied " + myImages[myIndex].label;
+                        ra2::display_message(message.c_str());
+                    }
+                }
+            }
+
+            return true;
+        }
+        else if (myChangingDisks)
+        {
+            /* L1 released, insert the newly selected disk */
+            myChangingDisks = false;
+            setEjectedState(false);
+
+            if (myIndex < myImages.size())
+            {
+                std::string message = "Inserted " + myImages[myIndex].label;
+                ra2::display_message(message.c_str());
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
 } // namespace ra2
