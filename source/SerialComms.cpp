@@ -135,6 +135,10 @@ CSuperSerialCard::~CSuperSerialCard()
 	m_pExpansionRom = NULL;
 }
 
+void CSuperSerialCard::Update(const ULONG)
+{
+}
+
 //===========================================================================
 
 // TODO: Serial Comms - UI Property Sheet Page:

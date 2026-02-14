@@ -27,7 +27,7 @@ class CSuperSerialCard : public Card
 public:
 	CSuperSerialCard(UINT slot);
 	virtual ~CSuperSerialCard();
-	virtual void Update(const ULONG nExecutedCycles) {}
+	virtual void Update(const ULONG nExecutedCycles);
 	virtual void InitializeIO(LPBYTE pCxRomPeripheral);
 	virtual void Reset(const bool powerCycle);
 	virtual void Destroy() {}
