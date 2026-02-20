@@ -38,6 +38,16 @@ jobs:
           cmake --build build-static
           ldd build-static/source/frontends/libretro/applewin_libretro.so
 
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            build/applen
+            build/qapple
+            build/sa2
+            build-static/source/frontends/libretro/applewin_libretro.so
+            build-static/source/frontends/libretro/applewin_libretro.info
+
   MSYS2:
     runs-on: windows-latest
     defaults:
