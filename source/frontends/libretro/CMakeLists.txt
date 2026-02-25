@@ -51,6 +51,9 @@ target_link_libraries(applewin_libretro PRIVATE
   common2
   )
 
+message("2 PCAP_LIBRARIES = ${PCAP_LIBRARIES}")
+message("2 SLIRP_LIBRARIES = ${SLIRP_LIBRARIES}")
+
 if (STATIC_LINKING)
   target_link_options(applewin_libretro PRIVATE
     -static-libgcc -static-libstdc++)

@@ -30,6 +30,9 @@ if (NOT WIN32 AND NOT IOS)
   endif()
 endif()
 
+message("1 PCAP_LIBRARIES = ${PCAP_LIBRARIES}")
+message("1 SLIRP_LIBRARIES = ${SLIRP_LIBRARIES}")
+
 set(SOURCE_FILES
   Tfe/tfesupp.cpp
   Tfe/NetworkBackend.cpp
