@@ -1,3 +1,16 @@
+# AppleWin libretro buildbot core
+
+This repository hosts the build source for the AppleWin core when it is built on libretro build system. The aim is to keep this in sync with https://github.com/audetto/AppleWin .
+
+Currently produced builds:
+- Linux x86 and x86_64
+- Windows 32 and 64-bit
+- OSX
+- Android arm64
+- iOS
+
+The upstream readme file follows below:
+
 # AppleWin on Linux
 
 This is a linux port of [AppleWin](https://github.com/AppleWin/AppleWin), that shares 100% of the code of the core emulator and video generation. Audio, UI, scheduling and other peripherals are **reimplemented**.
