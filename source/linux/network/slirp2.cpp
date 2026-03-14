@@ -81,16 +81,6 @@ namespace
         LogFileOutput("SLIRP: slirp_timer_mod()\n");
     }
 
-    void net_slirp_register_poll_fd(int /* fd */, void * /* opaque */)
-    {
-        // most existing implementations are a NOOP???
-    }
-
-    void net_slirp_unregister_poll_fd(int /* fd */, void * /* opaque */)
-    {
-        // most existing implementations are a NOOP???
-    }
-
     void net_slirp_notify(void *opaque)
     {
         LogFileOutput("SLIRP: slirp_notify()\n");
@@ -128,8 +118,6 @@ SlirpBackend::SlirpBackend(const std::vector<PortFwd> &portFwds)
         .timer_new = net_slirp_timer_new,
         .timer_free = net_slirp_timer_free,
         .timer_mod = net_slirp_timer_mod,
-        .register_poll_fd = net_slirp_register_poll_fd,
-        .unregister_poll_fd = net_slirp_unregister_poll_fd,
         .notify = net_slirp_notify,
     };
     Slirp *slirp = slirp_new(&cfg, &slirp_cb, this);
