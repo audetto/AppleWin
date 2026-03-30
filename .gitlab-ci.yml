@@ -105,6 +105,13 @@ libretro-build-linux-i686:
   variables:
     EXTRA_PATH: source/frontends/libretro
 
+# Linux 64-bit (ARM)
+libretro-build-linux-aarch64:
+  extends:
+    - .libretro-linux-cmake-aarch64
+    - .core-defs
+
+
 # MacOS 64-bit
 libretro-build-osx-x64:
   extends:
