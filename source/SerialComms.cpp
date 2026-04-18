@@ -74,7 +74,7 @@ CSuperSerialCard::CSuperSerialCard(UINT slot) :
 	m_pExpansionRom(NULL),
 	m_hFrameWindow(NULL)
 {
-	if (m_slot != 2)	// fixme
+	if (m_slot == SLOT0)
 		ThrowErrorInvalidSlot();
 
 	m_dwSerialPortItem = 0;
@@ -987,36 +987,6 @@ void CSuperSerialCard::Reset(const bool /* powerCycle */)
 
 //===========================================================================
 
-// dwNewSerialPortItem is the drop-down list item
-void CSuperSerialCard::CommSetSerialPort(DWORD dwNewSerialPortItem)
-{
-	if (m_dwSerialPortItem == dwNewSerialPortItem)
-		return;
-
-	_ASSERT(!IsActive());
-	if (IsActive())
-		return;
-
-	m_dwSerialPortItem = dwNewSerialPortItem;
-
-	if (m_dwSerialPortItem == m_uTCPChoiceItemIdx)
-	{
-		m_currentSerialPortName = TEXT_SERIAL_TCP;
-	}
-	else if (m_dwSerialPortItem != 0)
-	{
-		m_currentSerialPortName = StrFormat(TEXT_SERIAL_COM "%d", m_vecSerialPortsItems[m_dwSerialPortItem]);
-	}
-	else
-	{
-		m_currentSerialPortName.clear();	// "None"
-	}
-
-	SetRegistrySerialPortName();
-}
-
-//===========================================================================
-
 // Had this error when sizeof(m_RecvBuffer)==1 was used
 // UPDATE: Fixed by using double-buffered queue
 //
@@ -1344,6 +1314,47 @@ std::string const& CSuperSerialCard::GetSerialPortChoices()
 	return m_strSerialPortChoices;
 }
 
+// dwNewSerialPortItem is the Config's drop-down list item
+void CSuperSerialCard::SetSerialPortItem(DWORD dwNewSerialPortItem)
+{
+	// NB. m_dwSerialPortItem may match dwNewSerialPortItem, but m_vecSerialPortsItems[] have have changed, eg:
+	// . vec[None, TCP] -> vec[None, COM1, TCP]: changing from old item-1(TCP) to new item-1(COM1)
+
+	_ASSERT(!IsActive());
+	if (IsActive())
+		return;
+
+	m_dwSerialPortItem = dwNewSerialPortItem;
+
+	if (m_dwSerialPortItem == m_uTCPChoiceItemIdx)
+	{
+		m_currentSerialPortName = TEXT_SERIAL_TCP;
+	}
+	else if (m_dwSerialPortItem != 0)
+	{
+		if (m_dwSerialPortItem < m_vecSerialPortsItems.size())
+			m_currentSerialPortName = StrFormat(TEXT_SERIAL_COM "%d", m_vecSerialPortsItems[m_dwSerialPortItem]);
+		else
+			m_currentSerialPortName.clear();	// "None" (eg. USB port unplugged between selecting & confirming choice)
+	}
+	else
+	{
+		m_currentSerialPortName.clear();	// "None"
+	}
+
+	SetRegistrySerialPortName();
+}
+
+void CSuperSerialCard::RescanCOMPortsAndSetSerialPortItem(DWORD newSerialPortItem)
+{
+	_ASSERT(!IsActive());
+	if (IsActive())
+		return;
+
+	ScanCOMPorts();
+	SetSerialPortItem(newSerialPortItem);
+}
+
 // Called by ctor & LoadSnapshot()
 void CSuperSerialCard::SetSerialPortName(const char* pSerialPortName)
 {
@@ -1397,8 +1408,6 @@ void CSuperSerialCard::SetRegistrySerialPortName(void)
 //    Removed: redundant data (encapsulated in Command & Control bytes)
 static const UINT kUNIT_VERSION = 2;
 
-#define SS_YAML_VALUE_CARD_SSC "Super Serial Card"
-
 #define SS_YAML_KEY_DIPSWDEFAULT "DIPSW Default"
 #define SS_YAML_KEY_DIPSWCURRENT "DIPSW Current"
 
@@ -1422,7 +1431,7 @@ static const UINT kUNIT_VERSION = 2;
 
 const std::string& CSuperSerialCard::GetSnapshotCardName(void)
 {
-	static const std::string name(SS_YAML_VALUE_CARD_SSC);
+	static const std::string name("Super Serial Card");
 	return name;
 }
 

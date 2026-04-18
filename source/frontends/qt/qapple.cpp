@@ -382,7 +382,7 @@ void QApple::on_actionAbout_Qt_triggered()
 void QApple::on_actionAbout_triggered()
 {
     QString qversion = QString::fromStdString(getVersion());
-    QString message = QString("Apple ][ emulator\n\nBased on AppleWin %1\n").arg(qversion);
+    QString message = QString("Apple II emulator\n\nBased on AppleWin %1\n").arg(qversion);
     QMessageBox::about(this, QApplication::applicationName(), message);
 }
 

@@ -6429,8 +6429,6 @@ void z80_WRMEM(WORD Addr, BYTE Value)
 
 //===========================================================================
 
-#define SS_YAML_VALUE_CARD_Z80 "Z80"
-
 #define SS_YAML_KEY_REGA "A"
 #define SS_YAML_KEY_REGB "B"
 #define SS_YAML_KEY_REGC "C"
@@ -6458,10 +6456,16 @@ void z80_WRMEM(WORD Addr, BYTE Value)
 #define SS_YAML_KEY_REGL2 "L'"
 #define SS_YAML_KEY_ACTIVE "Active"
 
+const std::string& Z80_GetSnapshotCardNameOld(void)
+{
+	static const std::string name("Z80");
+	return name;
+}
+
 const std::string& Z80_GetSnapshotCardName(void)
 {
-	static const std::string name(SS_YAML_VALUE_CARD_Z80);
-	return name;
+    static const std::string name("Z80 SoftCard");
+    return name;
 }
 
 void Z80_SaveSnapshot(class YamlSaveHelper& yamlSaveHelper, const UINT uSlot)
@@ -6517,7 +6521,7 @@ void Z80_SaveSnapshot(class YamlSaveHelper& yamlSaveHelper, const UINT uSlot)
 
 bool Z80_LoadSnapshot(class YamlLoadHelper& yamlLoadHelper, UINT uSlot, UINT version)
 {
-	if (uSlot != 4 && uSlot != 5)	// fixme
+	if (uSlot == SLOT0)
 		Card::ThrowErrorInvalidSlot(CT_Z80, uSlot);
 
 	if (version != 1)

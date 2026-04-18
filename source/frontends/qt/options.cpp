@@ -252,7 +252,6 @@ void setAppleWinPreferences(
     if (currentData.mockingboardVolume != newData.mockingboardVolume)
     {
         cardManager.GetMockingboardCardMgr().SetVolume(newData.mockingboardVolume, GetPropertySheet().GetVolumeMax());
-        REGSAVE(REGVALUE_MB_VOLUME, cardManager.GetMockingboardCardMgr().GetVolume());
     }
 
     if (currentData.apple2Type != newData.apple2Type)

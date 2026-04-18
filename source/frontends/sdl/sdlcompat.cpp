@@ -67,7 +67,7 @@ namespace sa2
 
         void toggleCursor()
         {
-            if (SDL_CursorVisible() == SDL_TRUE)
+            if (SDL_CursorVisible())
             {
                 SDL_HideCursor();
             }
@@ -79,7 +79,10 @@ namespace sa2
 
         SDL_Window *createWindow(const char *title, const common2::Geometry &geometry, SDL_WindowFlags flags)
         {
-            return SDL_CreateWindow(title, geometry.width, geometry.height, flags);
+            SDL_Window *window = SDL_CreateWindow(title, geometry.width, geometry.height, flags);
+            // we handle some keys via KEY_DOWN, some via TEXT_INPUT.
+            SDL_StartTextInput(window);
+            return window;
         }
 
         SDL_Renderer *createRenderer(SDL_Window *window, const int index)

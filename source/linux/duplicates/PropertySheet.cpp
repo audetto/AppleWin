@@ -15,3 +15,11 @@ bool CPropertySheet::SaveStateSelectImage(HWND hWindow, bool bSave)
 {
     return false;
 }
+
+void CPropertySheet::ResetAllToDefault()
+{
+}
+
+void CPropertySheet::ApplyConfigAfterClose(UINT bmPages)
+{
+}

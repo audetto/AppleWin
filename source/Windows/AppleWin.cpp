@@ -688,7 +688,11 @@ static void RepeatInitialization(void)
 	}
 
 	if (g_cmdLine.model != A2TYPE_MAX)
+	{
 		SetApple2Type(g_cmdLine.model);
+		GetPropertySheet().ConfigSaveApple2Type(g_cmdLine.model);
+		g_cmdLine.model = A2TYPE_MAX;	// Don't reapply after a restart
+	}
 
 	RGB_SetVideocard(g_cmdLine.rgbCard, g_cmdLine.rgbCardForegroundColor, g_cmdLine.rgbCardBackgroundColor);
 
@@ -712,9 +716,13 @@ static void RepeatInitialization(void)
 	// Apply the memory expansion switches after loading the Apple II machine type
 	if (g_cmdLine.uSaturnBanks)
 	{
-		Saturn128K::SetSaturnMemorySize(g_cmdLine.uSaturnBanks);	// Set number of banks before constructing Saturn card
-		if (!g_cmdLine.bSlotEmpty[SLOT0])
-			SetExpansionMemType(CT_Saturn128K);
+		if (IsApple2PlusOrClone(GetApple2Type()))
+		{
+			Saturn128K::SetSaturnMemorySizeSlot0(g_cmdLine.uSaturnBanks);	// Set number of banks before constructing Saturn card
+			if (!g_cmdLine.bSlotEmpty[SLOT0])
+				SetExpansionMemType(CT_Saturn128K);
+			dynamic_cast<Saturn128K&>(GetCardMgr().GetRef(SLOT0)).SetSaturnMemorySize(g_cmdLine.uSaturnBanks);
+		}
 		g_cmdLine.uSaturnBanks = 0;		// Don't reapply after a restart
 	}
 
@@ -737,10 +745,9 @@ static void RepeatInitialization(void)
 	// Init palette color
 	VideoSwitchVideocardPalette(RGB_GetVideocard(), GetVideo().GetVideoType());
 
-	// Allow the 4 hardcoded slots to be configurated as empty
+	// Allow the slots to be configured as empty
 	// NB. this state *is* persisted to the Registry/conf.ini (just like '-s7 empty' is)
-	// TODO: support bSlotEmpty[] for slots: 0
-	for (UINT i = SLOT1; i < NUM_SLOTS; i++)
+	for (UINT i = SLOT0; i < NUM_SLOTS; i++)
 	{
 		if (g_cmdLine.bSlotEmpty[i])
 			GetCardMgr().Remove(i);
@@ -800,7 +807,7 @@ static void RepeatInitialization(void)
 	{
 		if (GetCardMgr().QuerySlot(i) == CT_Disk2 && g_cmdLine.slotInfo[i].isDiskII13)
 		{
-			dynamic_cast<Disk2InterfaceCard&>(GetCardMgr().GetRef(i)).SetFirmware13Sector();
+			dynamic_cast<Disk2InterfaceCard&>(GetCardMgr().GetRef(i)).Set13SectorFirmware(true);
 		}
 		else if (GetCardMgr().QuerySlot(i) == CT_GenericHDD)
 		{
@@ -961,12 +968,10 @@ static void RepeatInitialization(void)
 			LogFileOutput("Main: HookFilterForKeyboard()\n");
 	}
 
-	// Need to test if it's safe to call ResetMachineState(). In the meantime, just call Disk2Card's Reset():
-	GetCardMgr().GetDisk2CardMgr().Reset(true);	// Switch from a booting A][+ to a non-autostart A][, so need to turn off floppy motor
-	LogFileOutput("Main: DiskReset()\n");
-	if (GetCardMgr().QuerySlot(SLOT7) == CT_GenericHDD)
-		GetCardMgr().GetRef(SLOT7).Reset(true);	// GH#515
-	LogFileOutput("Main: HDDReset()\n");
+	// Need to test if it's safe to call ResetMachineState(). In the meantime, just Reset() all cards:
+	// . Switch from a booting A][+ to a non-autostart A][, so need to turn off floppy motor; and GH#515 (for HDCs)
+	GetCardMgr().Reset(true);
+	LogFileOutput("Main: GetCardMgr().Reset()\n");
 
 	if (!g_bSysClkOK)
 	{

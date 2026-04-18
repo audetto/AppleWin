@@ -57,14 +57,12 @@ if (STATIC_LINKING)
 
   target_link_libraries(applewin_libretro PRIVATE
     -Wl,-Bstatic
-    ${PCAP_STATIC_LIBRARIES}
-    ${SLIRP_STATIC_LIBRARIES}
+    ${NETWORK_STATIC_LIBRARIES}
     -Wl,-Bdynamic
     )
 else()
   target_link_libraries(applewin_libretro PRIVATE
-    ${PCAP_LIBRARIES}
-    ${SLIRP_LIBRARIES}
+    ${NETWORK_LIBRARIES}
     )
 endif()
 

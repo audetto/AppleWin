@@ -162,7 +162,9 @@ bool ProcessCmdLine(LPSTR lpCmdLine)
 			lpCmdLine = GetCurrArg(lpNextArg);
 			lpNextArg = GetNextArg(lpNextArg);
 
-			if (strcmp(lpCmdLine, "saturn") == 0 || strcmp(lpCmdLine, "saturn128") == 0)
+			if (strcmp(lpCmdLine, "empty") == 0)
+				g_cmdLine.bSlotEmpty[SLOT0] = true;
+			else if (strcmp(lpCmdLine, "saturn") == 0 || strcmp(lpCmdLine, "saturn128") == 0)
 				g_cmdLine.uSaturnBanks = Saturn128K::kMaxSaturnBanks;
 			else if (strcmp(lpCmdLine, "saturn64") == 0)
 				g_cmdLine.uSaturnBanks = Saturn128K::kMaxSaturnBanks / 2;
@@ -257,7 +259,7 @@ bool ProcessCmdLine(LPSTR lpCmdLine)
 						LogFileOutput("VidHD currently only supported in slot 3\n");
 				}
 				else if (strncmp(lpCmdLine, "socket", 6) == 0 &&
-					(lpCmdLine[6] == '0' || lpCmdLine[6] == '1') &&	// 0=$Cs20(top of card), 1=$Cs40(bottom of card)
+					(lpCmdLine[6] == '0' || lpCmdLine[6] == '1') &&	// 0=$Cs20(bottom of card), 1=$Cs40(top of card)
 					lpCmdLine[7] == '=')
 				{
 					BYTE socket = lpCmdLine[6] - '0';

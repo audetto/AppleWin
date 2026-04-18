@@ -213,27 +213,27 @@
            <widget class="QComboBox" name="apple2Type">
             <item>
              <property name="text">
-              <string>Apple ][ (Original)</string>
+              <string>Apple II (original)</string>
              </property>
             </item>
             <item>
              <property name="text">
-              <string>Apple ][+</string>
+              <string>Apple II Plus</string>
              </property>
             </item>
             <item>
              <property name="text">
-              <string>Apple ][ J-Plus</string>
+              <string>Apple II J-Plus</string>
              </property>
             </item>
             <item>
              <property name="text">
-              <string>Apple //e</string>
+              <string>Apple //e (original)</string>
              </property>
             </item>
             <item>
              <property name="text">
-              <string>Enhanced Apple //e</string>
+              <string>Apple //e (enhanced)</string>
              </property>
             </item>
             <item>

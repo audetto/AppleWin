@@ -19,6 +19,7 @@ public:
     void FrameSetCursorPosByMousePos() override;
     void ResizeWindow() override;
 
+    bool GetFullScreenShowSubunitStatus() override;
     void SetFullScreenShowSubunitStatus(bool bShow) override;
     void SetWindowedModeShowDiskiiStatus(bool bShow) override;
     bool GetBestDisplayResolutionForFullScreen(

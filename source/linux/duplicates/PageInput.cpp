@@ -12,4 +12,12 @@ void CPageInput::DlgOK(HWND hWnd)
 {
 }
 
+void CPageInput::ApplyConfigAfterClose()
+{
+}
+
+void CPageInput::ResetToDefault()
+{
+}
+
 CPageInput *CPageInput::ms_this = nullptr;

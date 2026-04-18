@@ -49,8 +49,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #define DEFAULT_SNAPSHOT_NAME "SaveState.aws.yaml"
 
-bool g_bSaveStateOnExit = false;
-
 static std::string g_strSaveStateFilename;
 static std::string g_strSaveStatePathname;
 static std::string g_strSaveStatePath;
@@ -76,6 +74,20 @@ static YamlHelper yamlHelper;
 #define UNIT_GAME_IO_CONNECTOR_VER 3
 
 #define UNIT_MISC_VER 1
+
+//-----------------------------------------------------------------------------
+
+static bool g_saveStateOnExit = kSaveStateOnExit_Default;
+
+bool GetSaveStateOnExit()
+{
+	return g_saveStateOnExit;
+}
+
+void SetSaveStateOnExit(bool saveStateOnExit)
+{
+	g_saveStateOnExit = saveStateOnExit;
+}
 
 //-----------------------------------------------------------------------------
 
@@ -431,8 +443,7 @@ static void Snapshot_LoadState_v2(void)
 		// . A change in h/w via loading a save-state avoids this VM restart
 		// The latter is the desired approach (as the former needs a "power-on" / F2 to start things again)
 
-		const CConfigNeedingRestart configNew = CConfigNeedingRestart::Create();
-		GetPropertySheet().ApplyNewConfigFromSnapshot(configNew);	// Saves new state to Registry (not slot/cards though)
+		GetPropertySheet().ApplyNewConfigFromSnapshot();	// Saves new state to Registry (not slot/cards though)
 
 		MemInitializeFromSnapshot();
 
@@ -548,7 +559,7 @@ void Snapshot_Startup()
 {
 	static bool bDone = false;
 
-	if(!g_bSaveStateOnExit || bDone)
+	if (!g_saveStateOnExit || bDone)
 		return;
 
 	Snapshot_LoadState();
@@ -562,7 +573,7 @@ void Snapshot_Shutdown()
 
 	_ASSERT(!bDone);
 	_ASSERT(!g_bRestart);
-	if(!g_bSaveStateOnExit || bDone)
+	if (!g_saveStateOnExit || bDone)
 		return;
 
 	Snapshot_SaveState();

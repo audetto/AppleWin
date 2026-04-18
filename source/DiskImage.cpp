@@ -83,7 +83,8 @@ ImageError_e ImageOpen(	const std::string & pszImageFilename,
 	// THE FILE MATCHES A KNOWN FORMAT
 
 	_ASSERT(bExpectFloppy);
-	if (!bExpectFloppy || !pImageInfo->uNumTracks)
+	const eImageType type = pImageInfo->pImageType ? pImageInfo->pImageType->GetType() : eImageUNKNOWN;
+	if (!bExpectFloppy || (!pImageInfo->uNumTracks && type != eImageAPL && type != eImagePRG))
 	{
 		ImageClose(*ppImageInfo);
 		*ppImageInfo = NULL;
@@ -257,6 +258,17 @@ UINT ImagePhaseToTrack(ImageInfo* const pImageInfo, const float phase, const boo
 UINT ImageGetMaxNibblesPerTrack(ImageInfo* const pImageInfo)
 {
 	return pImageInfo ? pImageInfo->maxNibblesPerTrack : NIBBLES_PER_TRACK;
+}
+
+bool ImageIsZeroTracksValidForThisType(ImageInfo* const pImageInfo)
+{
+	if (!pImageInfo || !pImageInfo->pImageType)
+		return false;
+
+	if (pImageInfo->pImageType->GetType() == eImageAPL || pImageInfo->pImageType->GetType() == eImagePRG)
+		return true;
+
+	return false;
 }
 
 void GetImageTitle(LPCTSTR pPathname, std::string & pImageName, std::string & pFullName)

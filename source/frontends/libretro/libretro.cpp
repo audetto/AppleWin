@@ -191,11 +191,13 @@ void retro_get_system_av_info(retro_system_av_info *info)
 
     Video &video = GetVideo();
 
+    const size_t linePeriod = ourGame->getFrameBufferLinePeriod();
+
     info->geometry.base_width = video.GetFrameBufferBorderlessWidth();
-    info->geometry.base_height = video.GetFrameBufferBorderlessHeight();
+    info->geometry.base_height = video.GetFrameBufferBorderlessHeight() / linePeriod;
     info->geometry.max_width = video.GetFrameBufferBorderlessWidth();
-    info->geometry.max_height = video.GetFrameBufferBorderlessHeight();
-    info->geometry.aspect_ratio = 0;
+    info->geometry.max_height = video.GetFrameBufferBorderlessHeight() / linePeriod;
+    info->geometry.aspect_ratio = float(info->geometry.base_width) / float(info->geometry.base_height * linePeriod);
 
     info->timing.fps = ra2::Game::FPS;
     info->timing.sample_rate = ra2::Game::SAMPLE_RATE;
@@ -319,37 +321,29 @@ bool retro_load_game(const retro_game_info *info)
     try
     {
         std::unique_ptr<ra2::Game> game = std::make_unique<ra2::Game>(supportsInputBitmasks);
+        game->start();
 
         const std::string snapshotEnding = ".aws.yaml";
         const std::string playlistEnding = ".m3u";
 
-        bool ok;
+        bool ok = true; // we support no content
 
         if (info && info->path && *info->path)
         {
             const std::string gamePath = info->path;
             if (endsWith(gamePath, snapshotEnding))
             {
-                game->start(); // must happen before loading the snapshot!
                 ok = game->loadSnapshot(gamePath);
             }
             else if (endsWith(gamePath, playlistEnding))
             {
                 ok = game->getDiskControl().insertPlaylist(gamePath);
-                game->start();
             }
             else
             {
                 ok = game->getDiskControl().insertDisk(gamePath);
-                game->start();
             }
             ra2::log_cb(RETRO_LOG_INFO, "Game path: %s -> %d\n", info->path, ok);
-        }
-        else
-        {
-            // we support no content
-            ok = true;
-            game->start();
         }
 
         if (ok)

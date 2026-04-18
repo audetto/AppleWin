@@ -24,6 +24,10 @@ void CSuperSerialCard::InitializeIO(LPBYTE pCxRomPeripheral)
 {
 }
 
+void CSuperSerialCard::RescanCOMPortsAndSetSerialPortItem(DWORD newSerialPortItem)
+{
+}
+
 // Unit version history:
 // 2: Added: Support DCD flag
 //    Removed: redundant data (encapsulated in Command & Control bytes)

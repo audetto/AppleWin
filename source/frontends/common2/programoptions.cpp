@@ -24,35 +24,59 @@ namespace common2
         g_bDisableDirectSound = options.noAudio;
         g_bDisableDirectSoundMockingboard = options.noAudio;
 
-        LPCSTR szImageName_drive[NUM_DRIVES] = {nullptr, nullptr};
-        bool driveConnected[NUM_DRIVES] = {true, true};
+        bool bBoot = false;
+        CardManager &cardManager = GetCardMgr();
+
+        bool insertDisk2Card = false;
+        LPCSTR szImageName_drive[NUM_DRIVES] = {};
 
         if (!options.disk1.empty())
         {
+            insertDisk2Card = true;
             szImageName_drive[DRIVE_1] = options.disk1.c_str();
         }
 
         if (!options.disk2.empty())
         {
+            insertDisk2Card = true;
             szImageName_drive[DRIVE_2] = options.disk2.c_str();
         }
 
-        bool bBoot = false;
-        InsertFloppyDisks(SLOT6, szImageName_drive, driveConnected, bBoot);
+        if (insertDisk2Card)
+        {
+            if (cardManager.QuerySlot(SLOT6) != CT_Disk2)
+            {
+                cardManager.Insert(SLOT6, CT_Disk2);
+            }
 
-        LPCSTR szImageName_harddisk[NUM_HARDDISKS] = {nullptr, nullptr};
+            bool driveConnected[NUM_DRIVES] = {true, true};
+            InsertFloppyDisks(SLOT6, szImageName_drive, driveConnected, bBoot);
+        }
+
+        bool insertHardDiskCard = false;
+        LPCSTR szImageName_harddisk[NUM_HARDDISKS] = {};
 
         if (!options.hardDisk1.empty())
         {
+            insertHardDiskCard = true;
             szImageName_harddisk[DRIVE_1] = options.hardDisk1.c_str();
         }
 
         if (!options.hardDisk2.empty())
         {
+            insertHardDiskCard = true;
             szImageName_harddisk[DRIVE_2] = options.hardDisk2.c_str();
         }
 
-        InsertHardDisks(SLOT7, szImageName_harddisk, bBoot);
+        if (insertHardDiskCard)
+        {
+            if (cardManager.QuerySlot(SLOT7) != CT_GenericHDD)
+            {
+                cardManager.Insert(SLOT7, CT_GenericHDD);
+            }
+
+            InsertHardDisks(SLOT7, szImageName_harddisk, bBoot);
+        }
 
         if (!options.customRom.empty())
         {

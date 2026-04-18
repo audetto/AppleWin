@@ -46,12 +46,12 @@ enum AppMode_e
 #define  BTN_SETUP         7
 
 // TODO: Move to StringTable.h
-#define	TITLE_APPLE_2			"Apple ][ Emulator"
-#define	TITLE_APPLE_2_PLUS		"Apple ][+ Emulator"
-#define	TITLE_APPLE_2_JPLUS		"Apple ][ J-Plus Emulator"
-#define	TITLE_APPLE_2E			"Apple //e Emulator"
-#define	TITLE_APPLE_2E_ENHANCED	"Enhanced Apple //e Emulator"
-#define TITLE_APPLE_2C          "Apple //e Emulator"
+#define	TITLE_APPLE_2			"Apple II Emulator"
+#define	TITLE_APPLE_2_PLUS		"Apple II Plus Emulator"
+#define	TITLE_APPLE_2_JPLUS		"Apple II J-Plus Emulator"
+#define	TITLE_APPLE_2E			"Apple //e (original) Emulator"
+#define	TITLE_APPLE_2E_ENHANCED	"Apple //e (enhanced) Emulator"
+#define TITLE_APPLE_2C          "Apple //c Emulator"
 #define	TITLE_PRAVETS_82        "Pravets 82 Emulator"
 #define	TITLE_PRAVETS_8M        "Pravets 8M Emulator"
 #define	TITLE_PRAVETS_8A        "Pravets 8A Emulator"
@@ -69,9 +69,9 @@ enum AppMode_e
 #define  REGVALUE_CONFIRM_REBOOT     "Confirm Reboot" // Added at 1.24.1 PageConfig
 #define  REGVALUE_FS_SHOW_SUBUNIT_STATUS "Full-screen show subunit status"
 #define  REGVALUE_SHOW_DISKII_STATUS "Show Disk II Status"
-#define  REGVALUE_SOUND_EMULATION    "Sound Emulation"
-#define  REGVALUE_SPKR_VOLUME        "Speaker Volume"
-#define  REGVALUE_MB_VOLUME          "Mockingboard Volume"
+//#define  REGVALUE_SOUND_EMULATION    "Sound Emulation"	// Deprecated from 1.31.1
+#define  REGVALUE_MASTER_VOLUME      "Master volume"
+#define  REGVALUE_SPKR_VOLUME        "Speaker Volume"		// Deprecated from 1.31.1
 #define  REGVALUE_SAVESTATE_FILENAME "Save State Filename"
 #define  REGVALUE_SAVE_STATE_ON_EXIT "Save State On Exit"
 #define  REGVALUE_HDD_ENABLED        "Harddisk Enable"		// Deprecated from 1.30.5
@@ -90,6 +90,7 @@ enum AppMode_e
 #define  REGVALUE_SWAP_BUTTONS_0_AND_1 "Swap buttons 0 and 1"
 #define  REGVALUE_MOUSE_CROSSHAIR    "Mouse crosshair"
 #define  REGVALUE_MOUSE_RESTRICT_TO_WINDOW "Mouse restrict to window"
+#define  REGVALUE_NO_SLOT_CLOCK      "No-Slot clock"
 #define  REGVALUE_THE_FREEZES_F8_ROM "The Freeze's F8 Rom"
 #define  REGVALUE_CIDERPRESSLOC      "CiderPress Location"
 #define  REGVALUE_DUMP_TO_PRINTER    "Dump to printer"
@@ -105,7 +106,7 @@ enum AppMode_e
 #define  REGVALUE_VIDEO_REFRESH_RATE    "Video Refresh Rate"
 #define  REGVALUE_SERIAL_PORT_NAME   "Serial Port Name"
 #define  REGVALUE_ENHANCE_DISK_SPEED "Enhance Disk Speed"
-#define  REGVALUE_CUSTOM_SPEED       "Custom Speed"
+//#define  REGVALUE_CUSTOM_SPEED       "Custom Speed"		// GH#853: Deprecated from 1.31.1
 #define  REGVALUE_EMULATION_SPEED    "Emulation Speed"
 #define  REGVALUE_WINDOW_SCALE       "Window Scale"
 #define  REGVALUE_UTHERNET_ACTIVE       "Uthernet Active"	// GH#977: Deprecated from 1.30.5
@@ -115,6 +116,7 @@ enum AppMode_e
 #define  REGVALUE_SLOT5					"Slot 5"			// GH#977: Deprecated from 1.30.4
 #define  REGVALUE_VERSION				"Version"
 #define  REGVALUE_AUX_NUM_BANKS			"Number of Banks"
+#define  REGVALUE_SATURN_NUM_BANKS		"Number of Banks"
 #define REG_CONFIG_SLOT_AUX			"Slot Auxiliary"
 #define REG_CONFIG_SLOT				"Slot "
 #define  REGVALUE_CARD_TYPE			"Card type"
@@ -123,6 +125,10 @@ enum AppMode_e
 #define  REGVALUE_LAST_DISK_1		"Last Disk Image 1"
 #define  REGVALUE_LAST_DISK_2		"Last Disk Image 2"
 #define  REGVALUE_LAST_HARDDISK_	"Last Harddisk Image "
+#define REGVALUE_MOCKINGBOARD_SSI263_SOCKET0 "SSI263 Socket 0"
+#define REGVALUE_MOCKINGBOARD_SSI263_SOCKET1 "SSI263 Socket 1"
+#define REGVALUE_MOCKINGBOARD_SC01 "SC01"
+#define REGVALUE_DISKII_13_SECTOR_FIRMWARE "13-sector Firmware"
 
 // Preferences 
 #define REG_PREFS                              "Preferences"

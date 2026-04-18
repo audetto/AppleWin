@@ -69,8 +69,7 @@ target_link_libraries(qapple PRIVATE
   appleii
   apple2roms
 
-  ${PCAP_LIBRARIES}
-  ${SLIRP_LIBRARIES}
+  ${NETWORK_LIBRARIES}
 
   Qt::Widgets
   Qt::Multimedia

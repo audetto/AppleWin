@@ -8,6 +8,7 @@
 #include "Log.h"
 #include "Core.h"
 #include "SaveState.h"
+#include "SoundCore.h"
 
 #ifndef U2_USE_SLIRP
 #include "Tfe/PCapBackend.h"
@@ -35,6 +36,11 @@ void LinuxFrame::FrameSetCursorPosByMousePos()
 
 void LinuxFrame::SetFullScreenShowSubunitStatus(bool /* bShow */)
 {
+}
+
+bool LinuxFrame::GetFullScreenShowSubunitStatus()
+{
+    return false;
 }
 
 bool LinuxFrame::GetBestDisplayResolutionForFullScreen(
@@ -168,7 +174,9 @@ void LinuxFrame::Restart()
 
 void LinuxFrame::LoadSnapshot()
 {
+    SoundCore_SetFade(FADE_OUT);
     Snapshot_LoadState();
+    SoundCore_SetFade(FADE_IN);
 }
 
 std::shared_ptr<NetworkBackend> LinuxFrame::CreateNetworkBackend(const std::string &interfaceName)

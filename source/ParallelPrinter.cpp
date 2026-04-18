@@ -225,8 +225,6 @@ void ParallelPrinterCard::SetRegistryConfig(void)
 
 //===========================================================================
 
-#define SS_YAML_VALUE_CARD_PRINTER "Generic Printer"
-
 #define SS_YAML_KEY_INACTIVITY "Inactivity"
 #define SS_YAML_KEY_IDLELIMIT "Printer Idle Limit"
 #define SS_YAML_KEY_FILENAME "Print Filename"
@@ -239,7 +237,7 @@ void ParallelPrinterCard::SetRegistryConfig(void)
 
 const std::string& ParallelPrinterCard::GetSnapshotCardName(void)
 {
-	static const std::string name(SS_YAML_VALUE_CARD_PRINTER);
+	static const std::string name("Generic Printer");
 	return name;
 }
 
@@ -261,9 +259,6 @@ void ParallelPrinterCard::SaveSnapshot(class YamlSaveHelper& yamlSaveHelper)
 
 bool ParallelPrinterCard::LoadSnapshot(class YamlLoadHelper& yamlLoadHelper, UINT version)
 {
-	if (m_slot != SLOT1)	// fixme
-		Card::ThrowErrorInvalidSlot(CT_GenericPrinter, m_slot);
-
 	if (version != 1)
 		Card::ThrowErrorInvalidVersion(CT_GenericPrinter, version);
 

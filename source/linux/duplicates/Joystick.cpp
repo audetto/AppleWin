@@ -30,6 +30,16 @@ void JoySetButtonVirtualKey(UINT button, UINT virtKey)
 {
 }
 
+uint32_t JoyGetJoyType(UINT num)
+{
+    return 0;
+}
+
+short JoyGetTrim(bool bAxisX)
+{
+    return 0;
+}
+
 #define SS_YAML_KEY_COUNTERRESETCYCLE "Counter Reset Cycle"
 #define SS_YAML_KEY_JOY0TRIMX "Joystick0 TrimX"
 #define SS_YAML_KEY_JOY0TRIMY "Joystick0 TrimY"

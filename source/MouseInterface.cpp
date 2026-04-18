@@ -139,7 +139,7 @@ CMouseInterface::CMouseInterface(UINT slot) :
 	m_pSlotRom(NULL),
 	m_syncEvent(slot, 0, SyncEventCallback)	// use slot# as "unique" id for MouseInterfaces
 {
-	if (m_slot != 4)	// fixme
+	if (m_slot == SLOT0)
 		ThrowErrorInvalidSlot();
 
 	m_6821.SetListenerB( this, M6821_Listener_B );
@@ -601,8 +601,6 @@ void CMouseInterface::SetButton(eBUTTON Button, eBUTTONSTATE State)
 	OnMouseEvent();
 }
 
-#define SS_YAML_VALUE_CARD_MOUSE "Mouse Card"
-
 #define SS_YAML_KEY_MC6821 "MC6821"
 #define SS_YAML_KEY_PRA "PRA"
 #define SS_YAML_KEY_DDRA "DDRA"
@@ -637,7 +635,7 @@ void CMouseInterface::SetButton(eBUTTON Button, eBUTTONSTATE State)
 
 const std::string& CMouseInterface::GetSnapshotCardName(void)
 {
-	static const std::string name(SS_YAML_VALUE_CARD_MOUSE);
+	static const std::string name("Mouse Card");
 	return name;
 }
 

@@ -19,7 +19,7 @@ namespace sa2
 {
 
     template <typename T, typename A>
-    void comboIterator(const char *label, const T current, const std::map<T, std::string> &values, const A action)
+    void comboIterator1(const char *label, const T current, const std::map<T, std::string> &values, const A action)
     {
         if (ImGui::BeginCombo(label, values.at(current).c_str()))
         {
@@ -42,17 +42,16 @@ namespace sa2
         }
     }
 
-    template <typename T, typename A>
-    void comboIterator(
-        const char *label, const T current, const std::vector<T> &values, const std::map<T, std::string> &names,
-        const A action)
+    template <typename T, typename A, typename F>
+    void comboIterator2(
+        const char *label, const T current, const std::vector<T> &values, const F getName, const A action)
     {
-        if (ImGui::BeginCombo(label, names.at(current).c_str()))
+        if (ImGui::BeginCombo(label, getName(current).c_str()))
         {
             for (const auto &it : values)
             {
                 const T value = it;
-                const std::string &name = names.at(it);
+                const std::string &name = getName(it);
                 const bool isSelected = current == value;
                 if (ImGui::Selectable(name.c_str(), isSelected))
                 {
@@ -67,18 +66,17 @@ namespace sa2
         }
     }
 
-    const std::string &getCardName(SS_CARDTYPE card);
+    std::string getCardName(SS_CARDTYPE card);
     const std::string &getCPUName(eCpuType cpu);
     const std::string &getAppModeName(AppMode_e mode);
     const std::string &getDiskStatusName(Disk_Status_e status);
 
-    const std::vector<SS_CARDTYPE> &getCardsForSlot(size_t slot);
-    const std::vector<SS_CARDTYPE> &getExpansionCards();
+    std::vector<SS_CARDTYPE> getCardsForSlot(size_t slot);
+    std::vector<SS_CARDTYPE> getExpansionCards();
 
     const std::map<eApple2Type, std::string> &getAapple2Types();
     const std::map<DONGLETYPE, std::string> &getDongleTypes();
     const std::map<VideoType_e, std::string> &getVideoTypes();
-    const std::map<SS_CARDTYPE, std::string> &getCardNames();
 
     void insertCard(size_t slot, SS_CARDTYPE card, FrameBase *frame);
     void setExpansionCard(SS_CARDTYPE card);

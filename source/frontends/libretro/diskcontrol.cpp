@@ -181,8 +181,8 @@ namespace ra2
     bool DiskControl::insertFloppyDisk(const std::string &path, const bool writeProtected, bool const createIfNecessary)
     {
         CardManager &cardManager = GetCardMgr();
-
         Disk2InterfaceCard *disk2Card = dynamic_cast<Disk2InterfaceCard *>(cardManager.GetObj(SLOT6));
+
         if (disk2Card)
         {
             const ImageError_e error = disk2Card->InsertDisk(DRIVE_1, path, writeProtected, createIfNecessary);
@@ -200,13 +200,8 @@ namespace ra2
     bool DiskControl::insertHardDisk(const std::string &path)
     {
         CardManager &cardManager = GetCardMgr();
-
-        if (cardManager.QuerySlot(SLOT7) != CT_GenericHDD)
-        {
-            cardManager.Insert(SLOT7, CT_GenericHDD);
-        }
-
         HarddiskInterfaceCard *harddiskCard = dynamic_cast<HarddiskInterfaceCard *>(cardManager.GetObj(SLOT7));
+
         if (harddiskCard)
         {
             const BOOL bRes = harddiskCard->Insert(HARDDISK_1, path);

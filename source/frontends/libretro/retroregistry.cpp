@@ -8,6 +8,7 @@
 #include "Common.h"
 #include "Card.h"
 #include "Video.h"
+#include "Interface.h"
 
 #include "libretro.h"
 
@@ -35,6 +36,9 @@ namespace
         {CATEGORY_RETROPAD_MAPPING, "RetroPad Mapping", "Configure RetroPad mapping options."},
         {nullptr, nullptr, nullptr},
     };
+
+    // we use the same bit settings for simplicity
+    const VideoStyle_e VS_280_LINES = static_cast<VideoStyle_e>(0x08);
 
     struct Variable
     {
@@ -165,20 +169,21 @@ namespace
         {
             {
                 "machine",
-                "Apple ][ Type",
+                "Apple II Type",
                 CATEGORY_SYSTEM,
                 {
-                    {"Enhanced Apple //e", A2TYPE_APPLE2EENHANCED},
-                    {"Apple ][ (Original)", A2TYPE_APPLE2},
-                    {"Apple ][+", A2TYPE_APPLE2PLUS},
-                    {"Apple ][ J-Plus", A2TYPE_APPLE2JPLUS},
-                    {"Apple //e", A2TYPE_APPLE2E},
+                    {"Apple II (original)", A2TYPE_APPLE2},
+                    {"Apple II Plus", A2TYPE_APPLE2PLUS},
+                    {"Apple II J-Plus", A2TYPE_APPLE2JPLUS},
+                    {"Apple //e (original)", A2TYPE_APPLE2E},
+                    {"Apple //e (enhanced)", A2TYPE_APPLE2EENHANCED},
                     {"Pravets 82", A2TYPE_PRAVETS82},
                     {"Pravets 8M", A2TYPE_PRAVETS8M},
                     {"Pravets 8A", A2TYPE_PRAVETS8A},
                     {"Base64A", A2TYPE_BASE64A},
                     {"TK3000 //e", A2TYPE_TK30002E},
                 },
+                "Apple //e (enhanced)",
             },
             REG_CONFIG,
             REGVALUE_APPLE2_TYPE, // reset required
@@ -203,11 +208,11 @@ namespace
                 CATEGORY_SYSTEM,
                 {
                     {"Empty", CT_Empty},
-                    {"Mockingboard", CT_MockingboardC},
-                    {"Mouse", CT_MouseInterface},
+                    {"Mockingboard C", CT_MockingboardC},
+                    {"Mouse Card", CT_MouseInterface},
                     {"Phasor", CT_Phasor},
                 },
-                "Mockingboard",
+                "Mockingboard C",
             },
             "Configuration\\Slot 4",
             REGVALUE_CARD_TYPE, // reset required
@@ -219,13 +224,27 @@ namespace
                 CATEGORY_SYSTEM,
                 {
                     {"Empty", CT_Empty},
-                    {"CP/M", CT_Z80},
-                    {"Mockingboard", CT_MockingboardC},
+                    {"Z80 SoftCard", CT_Z80},
+                    {"Mockingboard C", CT_MockingboardC},
                     {"Phasor", CT_Phasor},
-                    {"SAM/DAC", CT_SAM},
+                    {"SAM", CT_SAM},
                 },
             },
             "Configuration\\Slot 5",
+            REGVALUE_CARD_TYPE, // reset required
+        },
+        {
+            {
+                "slot7",
+                "Card in Slot 7",
+                CATEGORY_SYSTEM,
+                {
+                    {"Empty", CT_Empty},
+                    {"Hard Disk Controller", CT_GenericHDD},
+                },
+                "Hard Disk Controller",
+            },
+            "Configuration\\Slot 7",
             REGVALUE_CARD_TYPE, // reset required
         },
         {
@@ -254,7 +273,8 @@ namespace
                 CATEGORY_SYSTEM,
                 {
                     {"Half Scanlines", VS_HALF_SCANLINES},
-                    {"None", VS_NONE},
+                    {"560 x 192", VS_NONE},
+                    {"280 x 192", VS_280_LINES},
                 },
             },
             REG_CONFIG,
@@ -560,6 +580,12 @@ namespace ra2
         uint32_t value = 100;
         RegLoadValue(REG_RA2, REGVALUE_MOUSE_SPEED_00, TRUE, &value);
         return value / 100.0;
+    }
+
+    bool is280Lines()
+    {
+        const bool halfLines = GetVideo().IsVideoStyle(VS_280_LINES);
+        return halfLines;
     }
 
 } // namespace ra2

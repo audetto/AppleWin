@@ -12,4 +12,12 @@ void CPageAdvanced::DlgOK(HWND hWnd)
 {
 }
 
+void CPageAdvanced::ApplyConfigAfterClose()
+{
+}
+
+void CPageAdvanced::ResetToDefault()
+{
+}
+
 CPageAdvanced *CPageAdvanced::ms_this = nullptr;

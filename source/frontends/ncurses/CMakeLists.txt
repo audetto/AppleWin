@@ -47,8 +47,7 @@ target_link_libraries(applen PRIVATE
   appleii
   common2
 
-  ${PCAP_LIBRARIES}
-  ${SLIRP_LIBRARIES}
+  ${NETWORK_LIBRARIES}
   
   ${NCURSES_LIBRARIES}
   ${LIBEVDEV_LIBRARIES}

@@ -1,4 +1,4 @@
-# SA2: Apple ][ Emulator for Linux based on SDL2
+# SA2: Apple II Emulator for Linux based on SDL2
 
 This file only lists options not already described in ``-h``.
 

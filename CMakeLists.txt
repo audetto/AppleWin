@@ -100,7 +100,7 @@ string(REGEX MATCH "#define APPLEWIN_VERSION (.*)" _ ${VERSION_FILE})
 string(REPLACE "," "." VERSION ${CMAKE_MATCH_1})
 
 set(CPACK_PACKAGE_VERSION ${VERSION})
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Apple ][ emulator for Linux")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Apple II emulator for Linux")
 set(CPACK_PACKAGE_CONTACT "audetto <mariofutire@gmail.com>")
 
 set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)

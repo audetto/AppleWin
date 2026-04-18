@@ -12,4 +12,12 @@ void CPageConfig::DlgOK(HWND hWnd)
 {
 }
 
+void CPageConfig::ApplyConfigAfterClose()
+{
+}
+
+void CPageConfig::ResetToDefault()
+{
+}
+
 CPageConfig *CPageConfig::ms_this = nullptr;

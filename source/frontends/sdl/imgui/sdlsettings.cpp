@@ -137,6 +137,12 @@ namespace sa2
                     ImGui::SameLine();
                     HelpMarker("Show Apple video in a separate window.");
 
+                    bool fullscreen = frame->getFullscreen();
+                    if (ImGui::Checkbox("Fullscreen", &fullscreen))
+                    {
+                        frame->setFullscreen(fullscreen);
+                    }
+
                     ImGui::Checkbox("Preserve aspect ratio", &frame->getPreserveAspectRatio());
 
                     ImGui::Checkbox("Memory viewer", &myMemoryViewer.show);
@@ -159,7 +165,7 @@ namespace sa2
                     ImGui::Checkbox("Apple keyboard enabled", &keyboardEnabled);
                     ImGui::EndDisabled();
                     ImGui::SameLine();
-                    HelpMarker("Keys go to Apple ][.");
+                    HelpMarker("Keys go to Apple II.");
                     ImGui::Separator();
 
                     const std::string &snapshotPathname = Snapshot_GetPathname();
@@ -269,7 +275,7 @@ namespace sa2
 
                 if (ImGui::BeginTabItem("Hardware"))
                 {
-                    comboIterator(
+                    comboIterator1(
                         "Model", GetApple2Type(), getAapple2Types(),
                         [](eApple2Type x)
                         {
@@ -286,8 +292,8 @@ namespace sa2
                     for (size_t slot = SLOT1; slot < NUM_SLOTS; ++slot)
                     {
                         const SS_CARDTYPE current = cardManager.QuerySlot(slot);
-                        comboIterator(
-                            std::to_string(slot).c_str(), current, getCardsForSlot(slot), getCardNames(),
+                        comboIterator2(
+                            std::to_string(slot).c_str(), current, getCardsForSlot(slot), getCardName,
                             [slot, &frame](SS_CARDTYPE x) { insertCard(slot, x, frame); });
                     }
 
@@ -296,8 +302,8 @@ namespace sa2
                     {
                         // Expansion
                         const SS_CARDTYPE expansion = GetCurrentExpansionMemType();
-                        comboIterator(
-                            "Expansion", expansion, getExpansionCards(), getCardNames(),
+                        comboIterator2(
+                            "Expansion", expansion, getExpansionCards(), getCardName,
                             [](SS_CARDTYPE x) { setExpansionCard(x); });
 
                         int ramWorksMemorySize = GetRamWorksMemorySize();
@@ -309,7 +315,7 @@ namespace sa2
 
                     ImGui::Separator();
 
-                    comboIterator(
+                    comboIterator1(
                         "Game I/O Connector", GetCopyProtectionDongleType(), getDongleTypes(),
                         [](DONGLETYPE x)
                         {
@@ -589,7 +595,6 @@ namespace sa2
                     if (ImGui::SliderInt("Mockingboard volume", &myMockingboardVolume, 0, volumeMax))
                     {
                         mockingboard.SetVolume(volumeMax - myMockingboardVolume, volumeMax);
-                        REGSAVE(REGVALUE_MB_VOLUME, mockingboard.GetVolume());
                     }
 
                     ImGui::Separator();
@@ -647,7 +652,7 @@ namespace sa2
                 if (ImGui::BeginTabItem("Video"))
                 {
                     Video &video = GetVideo();
-                    comboIterator(
+                    comboIterator1(
                         "Video mode", video.GetVideoType(), getVideoTypes(),
                         [&video, &frame](VideoType_e x)
                         {
@@ -694,16 +699,17 @@ namespace sa2
                     CassetteTape::TapeInfo info;
                     tape.getTapeInfo(info);
 
-                    if (info.size)
+                    if (info.duration)
                     {
-                        const float remaining = float(info.size - (info.pos + 1)) / float(info.frequency);
-                        const float fraction = float(info.pos + 1) / float(info.size);
+                        const float remaining = (info.duration - info.position) / 1000.0;
+                        const float fraction = float(info.position) / float(info.duration);
+
                         char buf[32];
-                        sprintf(buf, "-%.1f s", remaining);
+                        snprintf(buf, sizeof(buf), "-%.1f s", remaining);
                         const ImU32 color = info.bit ? IM_COL32(200, 0, 0, 100) : IM_COL32(0, 200, 0, 100);
 
                         ImGui::PushStyleColor(ImGuiCol_PlotHistogram, color);
-                        ImGui::ProgressBar(fraction, ImVec2(-FLT_MIN, 0), buf);
+                        ImGui::ProgressBar(fraction, ImVec2(-FLT_MIN, 0), (info.playbackRate > 0) ? buf : "stopped");
                         ImGui::PopStyleColor();
 
                         ImGui::LabelText("Filename", "%s", info.filename.data());

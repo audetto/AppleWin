@@ -1,6 +1,11 @@
 include(FindPkgConfig)
 
-if (NOT WIN32 AND NOT EMSCRIPTEN)
+option(ENABLE_NETWORKING "Enable networking support (SLIRP/PCAP)" ON)
+
+set(SLIRP_FOUND "0")
+set(PCAP_FOUND "0")
+
+if (ENABLE_NETWORKING AND NOT WIN32 AND NOT IOS)
   pkg_search_module(SLIRP slirp)
 
   # if slirp is not found, we will try pcap
@@ -8,11 +13,11 @@ if (NOT WIN32 AND NOT EMSCRIPTEN)
   # but network will be badly affected
 
   # pcacp on Windows in managed in a different way, so we disable it
-  if ("${SLIRP_FOUND}" STREQUAL "")
+  if (NOT SLIRP_FOUND)
     message(WARNING "'libslirp' not found: will try 'libpcap' instead")
 
     pkg_search_module(PCAP libpcap)
-    if ("${PCAP_FOUND}" STREQUAL "")
+    if (NOT PCAP_FOUND)
       # old versions of pcap do not work with pkg-config
       # this is necessary on Rapsberri Pi OS
       execute_process(COMMAND pcap-config --cflags
@@ -24,9 +29,25 @@ if (NOT WIN32 AND NOT EMSCRIPTEN)
         execute_process(COMMAND pcap-config --libs
           OUTPUT_VARIABLE PCAP_LIBRARIES
           OUTPUT_STRIP_TRAILING_WHITESPACE)
+        execute_process(COMMAND pcap-config --libs --static
+          OUTPUT_VARIABLE PCAP_STATIC_LIBRARIES
+          OUTPUT_STRIP_TRAILING_WHITESPACE)
         set(PCAP_FOUND "1")
       endif()
     endif()
+  endif()
+
+  if (SLIRP_FOUND)
+    set(NETWORK_LIBRARIES ${SLIRP_LIBRARIES})
+    set(NETWORK_STATIC_LIBRARIES ${SLIRP_STATIC_LIBRARIES})
+  elseif (PCAP_FOUND)
+    set(NETWORK_LIBRARIES ${PCAP_LIBRARIES})
+    set(NETWORK_STATIC_LIBRARIES ${PCAP_STATIC_LIBRARIES})
+  endif()
+
+  if (DEFINED NETWORK_LIBRARIES)
+    set(NETWORK_LIBRARIES ${NETWORK_LIBRARIES} PARENT_SCOPE)
+    set(NETWORK_STATIC_LIBRARIES ${NETWORK_STATIC_LIBRARIES} PARENT_SCOPE)
   endif()
 endif()
 
@@ -123,8 +144,7 @@ set(SOURCE_FILES
   linux/duplicates/PageConfig.cpp
   linux/duplicates/PageConfigTfe.cpp
   linux/duplicates/PageInput.cpp
-  linux/duplicates/PageSound.cpp
-  linux/duplicates/PageDisk.cpp
+  linux/duplicates/PageSlots.cpp
   linux/duplicates/PageAdvanced.cpp
 
   Z80VICE/z80.cpp
@@ -239,7 +259,7 @@ add_library(appleii STATIC
   ${HEADER_FILES}
   )
 
-if ("${PCAP_FOUND}" STREQUAL "1")
+if (PCAP_FOUND)
   target_sources(appleii PRIVATE Tfe/tfearch.cpp)
 else()
   target_sources(appleii PRIVATE linux/duplicates/tfearch.cpp)

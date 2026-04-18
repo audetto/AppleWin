@@ -15,41 +15,13 @@ void CreateLanguageCard(void);
 
 namespace
 {
-    const std::map<SS_CARDTYPE, std::string> cards = {
-        {CT_Empty, "Empty"},
-        {CT_Disk2, "Disk II"},
-        {CT_SSC, "SSC"},
-        {CT_MockingboardC, "Mockingboard"},
-        {CT_MegaAudio, "MEGA Audio"},
-        {CT_SDMusic, "SD Music"},
-        {CT_GenericPrinter, "Generic Printer"},
-        {CT_GenericHDD, "Generic HDD"},
-        {CT_GenericClock, "Generic Clock"},
-        {CT_MouseInterface, "Mouse Interface"},
-        {CT_Z80, "Z80"},
-        {CT_Phasor, "Phasor"},
-        {CT_Echo, "Echo"},
-        {CT_SAM, "SAM"},
-        {CT_80Col, "80 Column"},
-        {CT_Extended80Col, "Extended 80 Column"},
-        {CT_RamWorksIII, "RamWorks III"},
-        {CT_Uthernet, "Uthernet"},
-        {CT_LanguageCard, "Language Card"},
-        {CT_LanguageCardIIe, "Language Card IIe"},
-        {CT_Saturn128K, "Saturn 128K"},
-        {CT_FourPlay, "4Play"},
-        {CT_SNESMAX, "SNES MAX"},
-        {CT_VidHD, "VidHD"},
-        {CT_Uthernet2, "Uthernet //"},
-    };
-
     const std::map<eApple2Type, std::string> apple2Types = {
-        {A2TYPE_APPLE2, "Apple ][ (Original)"},
-        {A2TYPE_APPLE2PLUS, "Apple ][+"},
-        {A2TYPE_APPLE2JPLUS, "Apple ][ J-Plus"},
-        {A2TYPE_APPLE2E, "Apple //e"},
-        {A2TYPE_APPLE2EENHANCED, "Enhanced Apple //e"},
-        {A2TYPE_APPLE2C, "Apple IIc"},
+        {A2TYPE_APPLE2, "Apple II (original)"},
+        {A2TYPE_APPLE2PLUS, "Apple II Plus"},
+        {A2TYPE_APPLE2JPLUS, "Apple II J-Plus"},
+        {A2TYPE_APPLE2E, "Apple //e (original)"},
+        {A2TYPE_APPLE2EENHANCED, "Apple //e (enhanced)"},
+        {A2TYPE_APPLE2C, "Apple //c"},
         {A2TYPE_PRAVETS8M, "Pravets 8M"},
         {A2TYPE_PRAVETS82, "Pravets 82"},
         {A2TYPE_BASE64A, "Base 64A"},
@@ -97,22 +69,6 @@ namespace
         {DT_HAYDENCOMPILER, "Hayden - Applesoft Compiler"},
     };
 
-    const std::map<size_t, std::vector<SS_CARDTYPE>> cardsForSlots = {
-        {0, {CT_Empty, CT_LanguageCard, CT_Saturn128K}},
-        {1, {CT_Empty, CT_GenericPrinter, CT_Uthernet2}},
-        {2, {CT_Empty, CT_SSC, CT_Uthernet2}},
-        {3, {CT_Empty, CT_Uthernet, CT_Uthernet2, CT_VidHD}},
-        {4, {CT_Empty, CT_MockingboardC, CT_MegaAudio, CT_SDMusic, CT_MouseInterface, CT_Phasor, CT_Uthernet2}},
-        {5,
-         {CT_Empty, CT_MockingboardC, CT_MegaAudio, CT_SDMusic, CT_Disk2, CT_GenericHDD, CT_Phasor, CT_Uthernet2,
-          CT_Z80, CT_SAM, CT_FourPlay, CT_SNESMAX}},
-        {6, {CT_Empty, CT_Disk2, CT_Uthernet2}},
-        {7, {CT_Empty, CT_GenericHDD, CT_Uthernet2}},
-    };
-
-    const std::vector<SS_CARDTYPE> expansionCards = {
-        CT_Empty, CT_LanguageCard, CT_Extended80Col, CT_Saturn128K, CT_RamWorksIII};
-
     uint8_t roundToRGB(float x)
     {
         // c++ cast truncates
@@ -124,9 +80,9 @@ namespace
 namespace sa2
 {
 
-    const std::string &getCardName(SS_CARDTYPE card)
+    std::string getCardName(SS_CARDTYPE card)
     {
-        return cards.at(card);
+        return Card::GetCardName(card);
     }
 
     const std::string &getCPUName(eCpuType cpu)
@@ -139,19 +95,27 @@ namespace sa2
         return appModes.at(mode);
     }
 
-    const std::vector<SS_CARDTYPE> &getCardsForSlot(size_t slot)
+    std::vector<SS_CARDTYPE> getCardsForSlot(size_t slot)
     {
-        return cardsForSlots.at(slot);
+        CardManager &cardManager = GetCardMgr();
+        SS_CARDTYPE currConfig[NUM_SLOTS];
+
+        for (size_t i = 0; i < NUM_SLOTS; i++)
+        {
+            currConfig[i] = cardManager.QuerySlot(i);
+        }
+
+        std::vector<SS_CARDTYPE> result;
+        cardManager.GetCardChoicesForSlot(slot, currConfig, result);
+        return result;
     }
 
-    const std::vector<SS_CARDTYPE> &getExpansionCards()
+    std::vector<SS_CARDTYPE> getExpansionCards()
     {
-        return expansionCards;
-    }
-
-    const std::map<SS_CARDTYPE, std::string> &getCardNames()
-    {
-        return cards;
+        CardManager &cardManager = GetCardMgr();
+        std::vector<SS_CARDTYPE> result;
+        cardManager.GetCardChoicesForAuxSlot(result);
+        return result;
     }
 
     const std::map<eApple2Type, std::string> &getAapple2Types()

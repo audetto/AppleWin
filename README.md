@@ -7,10 +7,10 @@ AppleWin is a fully-featured emulator supporting different Apple II models and c
 
 Apple II models supported include:
 
-* ][
-* ][+
-* //e
-* //e Enhanced
+* II (original)
+* II Plus
+* //e (original)
+* //e (enhanced)
 * Various clones (Pravets, TK3000, Base 64)
 
 There is currently no support for the //c, //c+, Laser 128, Laser 128EX, Laser 128EX2, or Apple IIgs.
@@ -27,7 +27,7 @@ Peripheral cards and add-on hardware supported:
 - RGB cards: Apple's Extended 80-Column Text/AppleColor Adaptor Card and 'Le Chat Mauve' Féline.
 - CP/M SoftCard
 - Uthernet I and II (ethernet cards)
-- Language Card and Saturn 64/128K for Apple II/II+ (and Saturn 128K for any Apple II in slot 3)
+- Language Card and Saturn 64/128K for Apple II/II Plus (and Saturn 128K for any Apple II in any slot)
 - 4Play and SNES MAX joystick cards
 - VidHD card (functionality limited to IIgs' Super Hi-Res video modes)
 - No Slot Clock (NSC)

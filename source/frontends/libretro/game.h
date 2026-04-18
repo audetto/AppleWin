@@ -41,6 +41,8 @@ namespace ra2
 
         void drawVideoBuffer();
 
+        size_t getFrameBufferLinePeriod() const;
+
         common2::PTreeRegistry &getRegistry();
         DiskControl &getDiskControl();
         InputRemapper &getInputRemapper();
@@ -72,7 +74,6 @@ namespace ra2
         DiskControl myDiskControl;
 
         std::vector<int16_t> myAudioBuffer;
-        LPBYTE myMainMemoryReference;
 
         void keyboardEmulation();
         void applyVariables();

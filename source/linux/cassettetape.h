@@ -2,6 +2,8 @@
 
 #include <vector>
 #include <cstdint>
+#include <functional>
+#include <optional>
 
 class CassetteTape
 {
@@ -14,8 +16,9 @@ public:
     struct TapeInfo
     {
         std::string_view filename;
-        size_t size;
-        size_t pos;
+        uint32_t duration; // ms
+        uint32_t position; // ms
+        double playbackRate; // seconds per second
         int frequency;
         uint8_t bit;
     };
@@ -23,6 +26,8 @@ public:
     void getTapeInfo(TapeInfo &info) const;
     void eject();
     void rewind();
+
+    std::function<void(double /* playbackRate */)> playbackRateChangeCallback = 0;
 
     static CassetteTape &instance();
 
@@ -32,9 +37,9 @@ private:
 
     std::vector<tape_data_t> myData;
 
-    int64_t myBaseCycles;
+    std::optional<int64_t> myBaseCycles;
+    bool myReachedEnd = false;
     int myFrequency;
-    bool myIsPlaying = false;
     BYTE myLastBit = 1;     // negative wave
     std::string myFilename; // just for info
 
