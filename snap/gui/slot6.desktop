@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Apple II Emulator
+GenericName=eXtended Apple II Emulator
+Comment=A 6502/Apple II emulator with sound/graphics
+Icon=${SNAP}/meta/gui/slot6.svg
+Exec=slot6
+Terminal=false
+Categories=Game;Emulator
+Keywords=Apple;6502;slot6

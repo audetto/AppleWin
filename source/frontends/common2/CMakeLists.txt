@@ -50,6 +50,7 @@ if ("${ROOT_PATH}" STREQUAL "")
   # if the 2 paths are the same
   set(ROOT_PATH "./")
 endif()
+file(RELATIVE_PATH SHARE_PATH ${CMAKE_INSTALL_FULL_BINDIR} ${CMAKE_INSTALL_FULL_DATADIR}/applewin)
 
 # yaml parsing is so complicated that we need a test!
 add_executable(testyaml
@@ -62,3 +63,10 @@ target_link_libraries(testyaml PRIVATE
   )
 
 configure_file(common_config.h.in common_config.h)
+
+install(FILES
+  ${CMAKE_SOURCE_DIR}/bin/A2_BASIC.SYM
+  ${CMAKE_SOURCE_DIR}/bin/A2_DOS33.SYM2
+  ${CMAKE_SOURCE_DIR}/bin/APPLE2E.SYM
+  DESTINATION ${CMAKE_INSTALL_DATADIR}/applewin/bin
+  )

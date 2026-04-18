@@ -43,20 +43,15 @@ namespace
     {
         const std::filesystem::path executable = getExecutableFilename();
 
-        // why a vector? there used to be multiple alternatives to try..
-        std::vector<std::filesystem::path> paths;
-        if (std::filesystem::exists(executable))
+        for (const auto &rel : {SHARE_PATH, ROOT_PATH})
         {
-            const auto root = std::filesystem::canonical(executable.parent_path() / ROOT_PATH);
-            paths.push_back(root);
-        }
-
-        for (const auto &path : paths)
-        {
-            const std::filesystem::path resourcePath = path / target;
-            if (std::filesystem::exists(resourcePath))
+            const std::filesystem::path path = executable.parent_path() / rel / target;
             {
-                return resourcePath;
+                if (std::filesystem::exists(path))
+                {
+                    const auto resourcePath = std::filesystem::canonical(path);
+                    return resourcePath;
+                }
             }
         }
 

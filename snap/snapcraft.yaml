@@ -1,0 +1,63 @@
+name: slot6
+base: core24
+version: "1.31.0.3"
+title: Apple II Emulator
+issues: https://github.com/audetto/AppleWin/issues
+website: https://github.com/audetto/AppleWin
+source-code:
+  - https://github.com/audetto/AppleWin
+summary: Apple II emulator for Linux
+icon: snap/gui/slot6.svg
+license: GPL-2.0
+contact:
+  - mariofutire@gmail.com
+description: |
+  Linux version of AppleWin emulator.
+
+grade: stable # must be 'stable' to release into candidate/stable channels
+confinement: strict # use 'strict' once you have the right plugs and slots
+
+platforms:
+  amd64:
+
+parts:
+  slot6-part:
+    plugin: cmake
+    source: .
+    source-type: local
+    # source-branch: snapcraft
+    cmake-parameters:
+      - -DCMAKE_INSTALL_PREFIX=/usr
+      - -DCMAKE_BUILD_TYPE=Debug
+      - -DBUILD_SA2=ON
+    build-packages:
+      - cmake
+      - g++
+      - ninja-build
+      - pkg-config
+      - xxd
+      - libsdl2-image-dev
+      - libsdl2-dev
+      - libgles-dev
+      - libslirp-dev
+    stage-packages:
+      - libsdl2-2.0-0
+      - libsdl2-image-2.0-0
+      - libslirp0
+      - libgles2
+
+apps:
+  slot6:
+    command: usr/bin/sa2
+    extensions:
+      - gnome
+    plugs:
+      - network
+      - network-bind
+      - audio-playback
+      - joystick
+      - home
+      - removable-media
+      - screen-inhibit-control
+      # - hardware-observe  # it complains about /run/udev/data/c241:5, something network / pcap related???
+      # - etc-xattr  # complains about /etc/xattr.conf, is it important?
