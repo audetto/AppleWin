@@ -91,7 +91,7 @@ namespace sa2
             SDL_SetPointerProperty(props, SDL_PROP_RENDERER_CREATE_WINDOW_POINTER, window);
 
 #ifndef __EMSCRIPTEN__
-            SDL_SetBooleanProperty(props, SDL_PROP_RENDERER_CREATE_PRESENT_VSYNC_NUMBER, SDL_TRUE);
+            SDL_SetBooleanProperty(props, SDL_PROP_RENDERER_CREATE_PRESENT_VSYNC_NUMBER, true);
 #endif
 
             if (index >= 0)

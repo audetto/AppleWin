@@ -11,12 +11,16 @@ option(SA2_SDL3 "Use SDL3" OFF)
 if (SA2_SDL3)
   message("sa2: using SDL3")
 
+  find_package(SDL3 REQUIRED)
+
+  target_link_libraries(sa2 PRIVATE
+    SDL3::SDL3
+  )
+
   if (NOT EMSCRIPTEN)
-    find_package(SDL3 REQUIRED)
     find_package(SDL3_image REQUIRED)
 
     target_link_libraries(sa2 PRIVATE
-      SDL3::SDL3
       SDL3_image::SDL3_image
     )
   endif()
@@ -169,19 +173,12 @@ if (EMSCRIPTEN)
     SUFFIX ".html"
     )
 
-  target_compile_options(sa2 PRIVATE
-    --use-port=sdl3
-    )
-
   set(EMSC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/emsc)
 
   target_link_options(sa2 PRIVATE
-    --use-port=sdl3
     -sFULL_ES3=1
     -sMIN_WEBGL_VERSION=2
     "SHELL:-lidbfs.js"
-    "SHELL:--pre-js ${EMSC_DIR}/src/fs.js"
-    "SHELL:--pre-js ${EMSC_DIR}/src/dragdrop.js"
     "SHELL:--shell-file ${EMSC_DIR}/src/a2e.html"
     "SHELL:--preload-file ${EMSC_DIR}/fs@/"
   )

@@ -49,7 +49,7 @@ namespace common2
 #else
         // https://specifications.freedesktop.org/basedir-spec/latest/
 #ifdef __EMSCRIPTEN__
-        const std::optional<std::string> xdgConfigHome = "/defaults/.config";
+        const std::optional<std::string> xdgConfigHome = "/storage/.config";
 #else
         const std::optional<std::string> xdgConfigHome = tryGetEnv("XDG_CONFIG_HOME");
 #endif

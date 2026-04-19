@@ -68,3 +68,8 @@ void RegSaveValue(LPCTSTR section, LPCTSTR key, BOOL peruser, uint32_t value)
     Registry::instance->putDWord(section, key, value);
     LogFileOutput("RegSaveValue: %s - %s = %d\n", section, key, value);
 }
+
+void Registry::synchronise()
+{
+   
+}

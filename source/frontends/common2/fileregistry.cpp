@@ -36,6 +36,9 @@ namespace
 
         std::string getLocation() const override;
 
+    protected:
+        void synchronise() override;
+
     private:
         const std::filesystem::path myFilename;
     };
@@ -50,6 +53,17 @@ namespace
         else
         {
             LogFileOutput("Registry: configuration file '%s' not found\n", myFilename.string().c_str());
+        }
+    }
+
+    void Configuration::synchronise()
+    {
+        try
+        {
+            saveToYamlFile(myFilename.string());
+        }
+        catch (const std::exception &)
+        {
         }
     }
 

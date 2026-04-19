@@ -29,6 +29,38 @@
 namespace
 {
 
+    void setupPersistentConfig()
+    {
+        namespace fs = std::filesystem;
+
+        const fs::path storage_path = "/storage/.config/applewin";
+        const fs::path default_path = "/defaults/.config/applewin";
+        const std::vector<std::string> config_files = {"applewin.yaml", "imgui.ini"};
+
+        // Ensure the destination directory exists in IDBFS
+        if (!fs::exists(storage_path))
+        {
+            fs::create_directories(storage_path);
+        }
+
+        for (const auto &file : config_files)
+        {
+            const auto dst = storage_path / file;
+            const auto src = default_path / file;
+
+            if (!fs::exists(dst))
+            {
+                std::cerr << "Restoring default config: " << file << std::endl;
+                std::error_code ec;
+                fs::copy_file(src, dst, fs::copy_options::overwrite_existing, ec);
+                if (ec)
+                {
+                    std::cerr << "Failed to copy " << file << ": " << ec.message() << std::endl;
+                }
+            }
+        }
+    }
+
     int getRefreshRate()
     {
         SDL_DisplayMode dummy;
@@ -201,6 +233,10 @@ extern "C"
 
             const std::string version = getVersion();
             SDL_SetAppMetadata("AppleWin", version.c_str(), "org.applewin");
+#endif
+
+#ifdef __EMSCRIPTEN__
+            setupPersistentConfig();
 #endif
 
             return SDL_AppCreate(appstate, argc, argv);
