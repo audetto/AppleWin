@@ -114,7 +114,8 @@ INT_PTR CPageSlots::DlgProcInternal(HWND hWnd, UINT message, WPARAM wparam, LPAR
 		case IDC_SLOT5:
 		case IDC_SLOT6:
 		case IDC_SLOT7:
-			if (HIWORD(wparam) == CBN_SELCHANGE)
+			// Use CBN_CLOSEUP (instead of CBN_SELCHANGE - which fires for each cursor up/down)
+			if (HIWORD(wparam) == CBN_CLOSEUP)
 			{
 				const UINT slot = LOWORD(wparam) - IDC_SLOT0;
 				const uint32_t newChoiceItem = (uint32_t)SendDlgItemMessage(hWnd, LOWORD(wparam), CB_GETCURSEL, 0, 0);
@@ -125,9 +126,12 @@ INT_PTR CPageSlots::DlgProcInternal(HWND hWnd, UINT message, WPARAM wparam, LPAR
 				else
 					_ASSERT(0);
 
-				m_PropertySheetHelper.GetConfigNew().m_Slot[slot] = newCard;
-
-				InitOptions(hWnd);
+				if (m_PropertySheetHelper.GetConfigNew().m_Slot[slot] != newCard)
+				{
+					m_PropertySheetHelper.GetConfigNew().m_Slot[slot] = newCard;
+					ResetCardOptionsToDefault(slot);
+					InitOptions(hWnd);
+				}
 			}
 			break;
 
@@ -142,14 +146,12 @@ INT_PTR CPageSlots::DlgProcInternal(HWND hWnd, UINT message, WPARAM wparam, LPAR
 				else
 					_ASSERT(0);
 
-				m_PropertySheetHelper.GetConfigNew().m_SlotAux = newCard;
-
-				if (newCard == CT_RamWorksIII)
-					m_PropertySheetHelper.GetConfigNew().m_RamWorksMemorySize = kDefaultExMemoryBanksRealRW3;
-				else
-					m_PropertySheetHelper.GetConfigNew().m_RamWorksMemorySize = 1;	// Must be 1 for all others (Empty, 80Col, Extended80Col)
-
-				InitOptions(hWnd);	// Needed to enable/disable the options button (depending on card)
+				if (m_PropertySheetHelper.GetConfigNew().m_SlotAux != newCard)
+				{
+					m_PropertySheetHelper.GetConfigNew().m_SlotAux = newCard;
+					ResetCardOptionsToDefault(SLOT_AUX);
+					InitOptions(hWnd);	// Needed to enable/disable the options button (depending on card)
+				}
 			}
 			break;
 
@@ -442,8 +444,6 @@ void CPageSlots::ApplyConfigAfterClose()
 
 void CPageSlots::ResetToDefault()
 {
-	// TODO: each card needs setting to its default config too
-
 	CConfigNeedingRestart& configNew = m_PropertySheetHelper.GetConfigNew();
 
 	for (UINT slot = SLOT0; slot < NUM_SLOTS; slot++)
@@ -452,16 +452,29 @@ void CPageSlots::ResetToDefault()
 	if (IsAppleIIe(m_PropertySheetHelper.GetConfigNew().m_Apple2Type))
 		configNew.m_SlotAux = GetCardMgr().QueryDefaultCardForSlot(SLOT_AUX, configNew.m_Apple2Type);
 
-	memset(configNew.m_diskII13SectorFirmware, 0, sizeof(configNew.m_diskII13SectorFirmware));
-
 	for (UINT slot = SLOT0; slot < NUM_SLOTS; slot++)
+		ResetCardOptionsToDefault(slot);
+
+	ResetCardOptionsToDefault(SLOT_AUX);
+}
+
+void CPageSlots::ResetCardOptionsToDefault(UINT slot)
+{
+	if (slot < NUM_SLOTS)
 	{
-		if (configNew.m_Slot[slot] == CT_MockingboardC || configNew.m_Slot[slot] == CT_Phasor)
-		{
-			configNew.m_Mockingboard[slot].ssi263A = kSSI263A_Default;
-			configNew.m_Mockingboard[slot].ssi263B = kSSI263B_Default;
-			configNew.m_Mockingboard[slot].sc01 = kSC01_Default;
-		}
+		ConfigResetDisk2(slot);
+		ConfigResetHarddisk(slot);
+		ConfigResetSSC(slot);
+		ConfigResetPrinter(slot);
+		ConfigResetMouseCard(slot);
+		ConfigResetSaturn(slot);
+		ConfigResetMockingboard(slot);
+	}
+	else
+	{
+		_ASSERT(slot == SLOT_AUX);
+		m_PropertySheetHelper.GetConfigNew().m_RamWorksMemorySize = 1;	// Must be 1 for all others (Empty, 80Col, Extended80Col)
+		ConfigResetRamWorks();
 	}
 }
 
@@ -557,7 +570,7 @@ bool CPageSlots::CheckFloppyPathnameInUse(const std::string& pathname, BYTE& inU
 				if (dynamic_cast<Disk2InterfaceCard&>(GetCardMgr().GetRef(slot)).DiskGetFullPathName(i) == pathname)
 				{
 					inUseSlot = slot;
-					inUseDrive = i + 1;
+					inUseDrive = i;
 					return true;
 				}
 			}
@@ -596,25 +609,26 @@ void CPageSlots::HandleFloppyDriveCombo(HWND hWnd, UINT driveSelected, UINT comb
 		BYTE inUseSlot = 0, inUseDrive = 0;
 		if (CheckFloppyPathnameInUse(pathname, inUseSlot, inUseDrive))
 		{
+			if (inUseSlot == slot && inUseDrive == driveSelected)
+				return InitComboFloppyDrive(hWnd, slot);			// User picked the same image, so restore combo
+
 			m_PropertySheetHelper.GetConfigNew().m_slotInfoForFDC[ms_slot].pathname[driveSelected] = "";
 
-			std::string strText = StrFormat("%s already mounted in slot %d, drive %d.", pathname.c_str(), inUseSlot, inUseDrive);
+			std::string strText = StrFormat("%s already mounted in slot %d, drive %d.", pathname.c_str(), inUseSlot, inUseDrive + 1);
 			GetFrame().FrameMessageBox(strText.c_str(), g_pAppTitle.c_str(), MB_ICONEXCLAMATION | MB_SETFOREGROUND);
 			return;
 		}
-		else
-		{
-			// Not in use: insert image to validate it
-			ImageError_e error = card.InsertDisk(driveSelected, pathname, false, false);
-			if (error != eIMAGE_ERROR_NONE)
-			{
-				card.NotifyInvalidImage(driveSelected, pathname, error);
-				m_PropertySheetHelper.GetConfigNew().m_slotInfoForFDC[ms_slot].pathname[driveSelected] = "";
-				return;
-			}
 
-			m_PropertySheetHelper.GetConfigNew().m_slotInfoForFDC[ms_slot].pathname[driveSelected] = pathname;
+		// Not in use: insert image to validate it
+		ImageError_e error = card.InsertDisk(driveSelected, pathname, false, false);
+		if (error != eIMAGE_ERROR_NONE)
+		{
+			card.NotifyInvalidImage(driveSelected, pathname, error);
+			m_PropertySheetHelper.GetConfigNew().m_slotInfoForFDC[ms_slot].pathname[driveSelected] = "";
+			return;
 		}
+
+		m_PropertySheetHelper.GetConfigNew().m_slotInfoForFDC[ms_slot].pathname[driveSelected] = pathname;
 
 		// Add floppy drive name as item 0 and select it
 		if (dwOpenDialogIndex > 0)
@@ -698,6 +712,17 @@ void CPageSlots::DlgDisk2OK(HWND hWnd)
 	m_PropertySheetHelper.GetConfigNew().m_diskII13SectorFirmware[ms_slot] = newDiskii13SectorFW;
 }
 
+void CPageSlots::ConfigResetDisk2(UINT slot)
+{
+	CConfigNeedingRestart& configNew = m_PropertySheetHelper.GetConfigNew();
+	if (configNew.m_Slot[slot] == CT_Disk2)
+	{
+		configNew.m_diskII13SectorFirmware[slot] = false;
+		for (UINT i = DRIVE_1; i < NUM_DRIVES; i++)
+			configNew.m_slotInfoForFDC[slot].pathname[i] = "";
+	}
+}
+
 //===========================================================================
 
 INT_PTR CALLBACK CPageSlots::DlgProcHarddisk(HWND hWnd, UINT message, WPARAM wparam, LPARAM lparam)
@@ -751,7 +776,13 @@ INT_PTR CPageSlots::DlgProcHarddiskInternal(HWND hWnd, UINT message, WPARAM wpar
 		break;
 
 	case WM_INITDIALOG:
-		InitComboHDD(hWnd, ms_slot);
+		{
+			InitComboHDD(hWnd, ms_slot);
+
+			const char choices[] = "Auto\0SmartPort mode\0ProDOS block mode (2 devices)\0ProDOS block mode (4 devices)\0";
+			const int choice = (int) m_PropertySheetHelper.GetConfigNew().m_hdcFirmware[ms_slot];
+			m_PropertySheetHelper.FillComboBox(hWnd, IDC_SLOT_OPT_COMBO_HDC_FW, choices, choice);
+		}
 		break;
 
 	default:
@@ -789,7 +820,7 @@ bool CPageSlots::CheckHDDPathnameInUse(const std::string& pathname, BYTE& inUseS
 				if (dynamic_cast<HarddiskInterfaceCard&>(GetCardMgr().GetRef(slot)).HarddiskGetFullPathName(i) == pathname)
 				{
 					inUseSlot = slot;
-					inUseDrive = i + 1;
+					inUseDrive = i;
 					return true;
 				}
 			}
@@ -828,25 +859,26 @@ void CPageSlots::HandleHDDCombo(HWND hWnd, UINT driveSelected, UINT comboSelecte
 		BYTE inUseSlot = 0, inUseDrive = 0;
 		if (CheckHDDPathnameInUse(pathname, inUseSlot, inUseDrive))
 		{
+			if (inUseSlot == slot && inUseDrive == driveSelected)
+				return InitComboHDD(hWnd, slot);			// User picked the same image, so restore combo
+
 			m_PropertySheetHelper.GetConfigNew().m_slotInfoForHDC[ms_slot].pathname[driveSelected] = "";
 
-			std::string strText = StrFormat("%s already mounted in slot %d, drive %d.", pathname.c_str(), inUseSlot, inUseDrive);
+			std::string strText = StrFormat("%s already mounted in slot %d, drive %d.", pathname.c_str(), inUseSlot, inUseDrive + 1);
 			GetFrame().FrameMessageBox(strText.c_str(), g_pAppTitle.c_str(), MB_ICONEXCLAMATION | MB_SETFOREGROUND);
 			return;
 		}
-		else
-		{
-			// Not in use: insert image to validate it
-			bool error = card.Insert(driveSelected, pathname);
-			if (error != true)
-			{
-				card.NotifyInvalidImage(pathname);
-				m_PropertySheetHelper.GetConfigNew().m_slotInfoForHDC[ms_slot].pathname[driveSelected] = "";
-				return;
-			}
 
-			m_PropertySheetHelper.GetConfigNew().m_slotInfoForHDC[ms_slot].pathname[driveSelected] = pathname;
+		// Not in use: insert image to validate it
+		bool error = card.Insert(driveSelected, pathname);
+		if (error != true)
+		{
+			card.NotifyInvalidImage(pathname);
+			m_PropertySheetHelper.GetConfigNew().m_slotInfoForHDC[ms_slot].pathname[driveSelected] = "";
+			return;
 		}
+
+		m_PropertySheetHelper.GetConfigNew().m_slotInfoForHDC[ms_slot].pathname[driveSelected] = pathname;
 
 		// Add hard drive name as item 0 and select it
 		if (dwOpenDialogIndex > 0)
@@ -858,14 +890,21 @@ void CPageSlots::HandleHDDCombo(HWND hWnd, UINT driveSelected, UINT comboSelecte
 		SendDlgItemMessage(hWnd, comboSelected, CB_INSERTSTRING, 0, (LPARAM)card.GetFullName(driveSelected).c_str());
 		SendDlgItemMessage(hWnd, comboSelected, CB_SETCURSEL, 0, 0);
 
-		// If the HD was in the other combo, remove now
-		const uint32_t comboOther = (comboSelected == IDC_SLOT_OPT_COMBO_HDD1) ? IDC_SLOT_OPT_COMBO_HDD2 : IDC_SLOT_OPT_COMBO_HDD1;
-
-		const uint32_t duplicated = (uint32_t)SendDlgItemMessage(hWnd, comboOther, CB_FINDSTRINGEXACT, -1, (LPARAM)card.GetFullName(driveSelected).c_str());
-		if (duplicated != CB_ERR)
+		// If the HD was in any other combo, remove now
+		for (UINT comboOther = IDC_SLOT_OPT_COMBO_HDD1; comboOther <= IDC_SLOT_OPT_COMBO_HDD8; comboOther++)
 		{
-			SendDlgItemMessage(hWnd, comboOther, CB_DELETESTRING, duplicated, 0);
-			SendDlgItemMessage(hWnd, comboOther, CB_SETCURSEL, -1, 0);
+			if (comboOther == comboSelected)
+				continue;
+
+			const uint32_t duplicated = (uint32_t)SendDlgItemMessage(hWnd, comboOther, CB_FINDSTRINGEXACT, -1, (LPARAM)card.GetFullName(driveSelected).c_str());
+			if (duplicated != CB_ERR)
+			{
+				SendDlgItemMessage(hWnd, comboOther, CB_DELETESTRING, duplicated, 0);
+				SendDlgItemMessage(hWnd, comboOther, CB_SETCURSEL, -1, 0);
+
+				card.Unplug(driveSelected);
+				m_PropertySheetHelper.GetConfigNew().m_slotInfoForHDC[ms_slot].pathname[driveSelected] = "";
+			}
 		}
 	}
 	else if (dwComboSelection == (dwOpenDialogIndex + 1))
@@ -910,6 +949,19 @@ void CPageSlots::HandleHDDSwap(HWND hWnd, UINT slot)
 
 void CPageSlots::DlgHarddiskOK(HWND hWnd)
 {
+	const HdcMode choice = (HdcMode)SendDlgItemMessage(hWnd, IDC_SLOT_OPT_COMBO_HDC_FW, CB_GETCURSEL, 0, 0);
+	m_PropertySheetHelper.GetConfigNew().m_hdcFirmware[ms_slot] = choice;
+}
+
+void CPageSlots::ConfigResetHarddisk(UINT slot)
+{
+	CConfigNeedingRestart& configNew = m_PropertySheetHelper.GetConfigNew();
+	if (configNew.m_Slot[slot] == CT_GenericHDD)
+	{
+		m_PropertySheetHelper.GetConfigNew().m_hdcFirmware[slot] = HdcDefault;
+		for (UINT i = HARDDISK_1; i < NUM_HARDDISKS; i++)
+			configNew.m_slotInfoForHDC[slot].pathname[i] = "";
+	}
 }
 
 //===========================================================================
@@ -1009,6 +1061,15 @@ INT_PTR CPageSlots::DlgProcSSCInternal(HWND hWnd, UINT message, WPARAM wparam, L
 	return TRUE;
 }
 
+void CPageSlots::ConfigResetSSC(UINT slot)
+{
+	CConfigNeedingRestart& configNew = m_PropertySheetHelper.GetConfigNew();
+	if (configNew.m_Slot[slot] == CT_SSC)
+	{
+		configNew.m_serialPortItem = 0;	// "None"
+	}
+}
+
 //===========================================================================
 
 INT_PTR CALLBACK CPageSlots::DlgProcPrinter(HWND hWnd, UINT message, WPARAM wparam, LPARAM lparam)
@@ -1101,6 +1162,15 @@ void CPageSlots::DlgPrinterOK(HWND hWnd)
 	card.SetIdleLimit((short)SendDlgItemMessage(hWnd, IDC_SPIN_PRINTER_IDLE, UDM_GETPOS, 0, 0));
 }
 
+void CPageSlots::ConfigResetPrinter(UINT slot)
+{
+	CConfigNeedingRestart& configNew = m_PropertySheetHelper.GetConfigNew();
+	if (configNew.m_Slot[slot] == CT_GenericPrinter)
+	{
+		configNew.m_parallelPrinterCard.ResetDefaultOptions();
+	}
+}
+
 //===========================================================================
 
 INT_PTR CALLBACK CPageSlots::DlgProcMouseCard(HWND hWnd, UINT message, WPARAM wparam, LPARAM lparam)
@@ -1152,6 +1222,16 @@ void CPageSlots::DlgMouseCardOK(HWND hWnd)
 {
 	m_PropertySheetHelper.GetConfigNew().m_mouseShowCrosshair = IsDlgButtonChecked(hWnd, IDC_MOUSE_CROSSHAIR) ? 1 : 0;
 	m_PropertySheetHelper.GetConfigNew().m_mouseRestrictToWindow = IsDlgButtonChecked(hWnd, IDC_MOUSE_RESTRICT_TO_WINDOW) ? 1 : 0;
+}
+
+void CPageSlots::ConfigResetMouseCard(UINT slot)
+{
+	CConfigNeedingRestart& configNew = m_PropertySheetHelper.GetConfigNew();
+	if (configNew.m_Slot[slot] == CT_MouseInterface)
+	{
+		configNew.m_mouseShowCrosshair = 0;
+		configNew.m_mouseRestrictToWindow = 0;
+	}
 }
 
 //===========================================================================
@@ -1212,6 +1292,15 @@ void CPageSlots::DlgSaturnOK(HWND hWnd)
 {
 	const uint32_t size = (uint32_t)SendDlgItemMessage(hWnd, IDC_SLIDER_SATURN_SIZE, TBM_GETPOS, 0, 0);
 	m_PropertySheetHelper.GetConfigNew().m_SaturnMemorySize[ms_slot] = size;
+}
+
+void CPageSlots::ConfigResetSaturn(UINT slot)
+{
+	CConfigNeedingRestart& configNew = m_PropertySheetHelper.GetConfigNew();
+	if (configNew.m_Slot[slot] == CT_Saturn128K)
+	{
+		configNew.m_SaturnMemorySize[slot] = Saturn128K::kMaxSaturnBanks;
+	}
 }
 
 //===========================================================================
@@ -1284,7 +1373,20 @@ void CPageSlots::DlgMockingboardOK(HWND hWnd)
 	m_PropertySheetHelper.GetConfigNew().m_Mockingboard[ms_slot].sc01 = sc01;
 }
 
+void CPageSlots::ConfigResetMockingboard(UINT slot)
+{
+	CConfigNeedingRestart& configNew = m_PropertySheetHelper.GetConfigNew();
+	if (configNew.m_Slot[slot] == CT_MockingboardC || configNew.m_Slot[slot] == CT_Phasor)
+	{
+		configNew.m_Mockingboard[slot].ssi263A = kSSI263A_Default;
+		configNew.m_Mockingboard[slot].ssi263B = kSSI263B_Default;
+		configNew.m_Mockingboard[slot].sc01 = kSC01_Default;
+	}
+}
+
 //===========================================================================
+
+static bool g_rw3SliderMoved = false;
 
 INT_PTR CALLBACK CPageSlots::DlgProcRamWorks3(HWND hWnd, UINT message, WPARAM wparam, LPARAM lparam)
 {
@@ -1296,6 +1398,10 @@ INT_PTR CPageSlots::DlgProcRamWorks3Internal(HWND hWnd, UINT message, WPARAM wpa
 {
 	switch (message)
 	{
+	case WM_HSCROLL:
+		g_rw3SliderMoved = true;
+		break;
+
 	case WM_COMMAND:
 		switch (LOWORD(wparam))
 		{
@@ -1329,6 +1435,8 @@ INT_PTR CPageSlots::DlgProcRamWorks3Internal(HWND hWnd, UINT message, WPARAM wpa
 
 		const uint32_t size = m_PropertySheetHelper.GetConfigNew().m_RamWorksMemorySize / 16;	// Convert from 64K banks to MB
 		SendDlgItemMessage(hWnd, IDC_SLIDER_RW3_SIZE, TBM_SETPOS, TRUE, size);
+
+		g_rw3SliderMoved = false;
 	}
 	break;
 
@@ -1341,6 +1449,20 @@ INT_PTR CPageSlots::DlgProcRamWorks3Internal(HWND hWnd, UINT message, WPARAM wpa
 
 void CPageSlots::DlgRamWorks3OK(HWND hWnd)
 {
+	// Slider UI is in 1MB chunks, but from save-state, can have finer granularity, eg. 4x 64K
+	// So only use slider position if user has touched it
+	if (!g_rw3SliderMoved)
+		return;
+
 	const uint32_t size = (uint32_t)SendDlgItemMessage(hWnd, IDC_SLIDER_RW3_SIZE, TBM_GETPOS, 0, 0);
 	m_PropertySheetHelper.GetConfigNew().m_RamWorksMemorySize = size * 16;	// Convert from MB to 64K banks
+}
+
+void CPageSlots::ConfigResetRamWorks()
+{
+	CConfigNeedingRestart& configNew = m_PropertySheetHelper.GetConfigNew();
+	if (configNew.m_SlotAux == CT_RamWorksIII)
+	{
+		configNew.m_RamWorksMemorySize = kDefaultExMemoryBanksRealRW3;
+	}
 }
