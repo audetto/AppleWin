@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>AppleWin Emscripten</title>
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0">
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: black;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      background: black;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas>
+
+  <!-- Emscripten-generated JS goes here -->
+  {{{ SCRIPT }}}
+
+</body>
+
+</html>

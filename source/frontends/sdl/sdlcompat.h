@@ -11,7 +11,10 @@
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_opengl.h>
+
+#ifndef __EMSCRIPTEN__
 #include <SDL3_image/SDL_image.h>
+#endif
 
 #define ImGui_ImplSDLX_InitForOpenGL ImGui_ImplSDL3_InitForOpenGL
 #define ImGui_ImplSDLX_Shutdown ImGui_ImplSDL3_Shutdown
@@ -63,6 +66,13 @@ typedef SDL_JoystickID Joystick_t;
 typedef SDL_Rect Renderer_Rect_t;
 typedef SDL_PixelFormatEnum PixelFormat_t;
 typedef int Joystick_t;
+
+enum SDL_AppResult
+{
+    SDL_APP_CONTINUE = 0,
+    SDL_APP_SUCCESS = 1,
+    SDL_APP_FAILURE = 2
+};
 
 #endif
 

@@ -241,6 +241,7 @@ namespace sa2
 
     void SDLFrame::SetApplicationIcon()
     {
+#ifndef __EMSCRIPTEN__
         const auto resource = GetResourceData(IDC_APPLEWIN_ICON);
 
         std::shared_ptr<SDL_Surface> icon(
@@ -249,6 +250,7 @@ namespace sa2
         {
             SDL_SetWindowIcon(myWindow.get(), icon.get());
         }
+#endif
     }
 
     const std::shared_ptr<SDL_Window> &SDLFrame::GetWindow() const
@@ -264,15 +266,6 @@ namespace sa2
         SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, lpCaption, s.c_str(), nullptr);
         ResetSpeed();
         return IDOK;
-    }
-
-    void SDLFrame::ProcessEvents(bool &quit)
-    {
-        SDL_Event e;
-        while (SDL_PollEvent(&e) != 0)
-        {
-            ProcessSingleEvent(e, quit);
-        }
     }
 
     void SDLFrame::ProcessSingleEvent(const SDL_Event &e, bool &quit)
@@ -418,6 +411,7 @@ namespace sa2
     void SDLFrame::ProcessDropEvent(const SDL_DropEvent &drop)
     {
         const auto file = SA2_DROP_FILE(drop);
+        printf("File dropped: %s\n", file);
         processFile(this, file, myDragAndDropSlot, myDragAndDropDrive);
         sa2::compat::maybeSDLfree(file);
     }

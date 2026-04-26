@@ -25,9 +25,8 @@ namespace sa2
         std::shared_ptr<SoundBuffer> CreateSoundBuffer(
             uint32_t dwBufferSize, uint32_t nSampleRate, int nChannels, const char *pszVoiceName) override;
 
+        virtual void ProcessSingleEvent(const SDL_Event &event, bool &quit);
         virtual bool Quit() const = 0;
-
-        void ProcessEvents(bool &quit);
 
         void FrameResetMachineState();
 
@@ -53,7 +52,6 @@ namespace sa2
         void SetApplicationIcon();
         void SetGLSynchronisation(const common2::EmulatorOptions &options);
 
-        virtual void ProcessSingleEvent(const SDL_Event &event, bool &quit);
         virtual void GetRelativeMousePosition(const SDL_MouseMotionEvent &motion, float &x, float &y) const = 0;
         virtual void ProcessKeyDown(const SDL_KeyboardEvent &key, bool &quit);
         virtual void ToggleMouseCursor() = 0;
