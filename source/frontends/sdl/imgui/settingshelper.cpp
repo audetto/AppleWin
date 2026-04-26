@@ -21,7 +21,6 @@ namespace
         {A2TYPE_APPLE2JPLUS, "Apple II J-Plus"},
         {A2TYPE_APPLE2E, "Apple //e (original)"},
         {A2TYPE_APPLE2EENHANCED, "Apple //e (enhanced)"},
-        {A2TYPE_APPLE2C, "Apple //c"},
         {A2TYPE_PRAVETS8M, "Pravets 8M"},
         {A2TYPE_PRAVETS82, "Pravets 82"},
         {A2TYPE_BASE64A, "Base 64A"},
