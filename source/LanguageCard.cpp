@@ -645,16 +645,14 @@ void LanguageCardManager::SetMemMode(const uint8_t slot)
 	{
 		// Rd: ROM or RAM / Wr: discarded
 		LanguageCardUnit& card = dynamic_cast<LanguageCardUnit&>(GetCardMgr().GetRef(slot));
-		uint32_t lcMemMode = card.GetLCMemMode();
-		::SetMemMode((::GetMemMode() & ~MF_LANGCARD_MASK) | (lcMemMode & MF_LANGCARD_MASK));
+		::SetMemMode((GetMemMode() & ~MF_LANGCARD_MASK) | (card.GetLCMemMode() & MF_LANGCARD_MASK));
 		// SetMemMainLanguageCard() already done by calling-function's IO()
 	}
 	else
 	{
 		// Rd: ROM or RAM / Wr: RAM
 		LanguageCardUnit& card = dynamic_cast<LanguageCardUnit&>(GetCardMgr().GetRef(slotWithWritableHighRam));
-		uint32_t lcMemMode = card.GetLCMemMode();
-		::SetMemMode((::GetMemMode() & ~MF_LANGCARD_MASK) | (lcMemMode & MF_LANGCARD_MASK));
+		::SetMemMode((GetMemMode() & ~MF_LANGCARD_MASK) | (card.GetLCMemMode() & MF_LANGCARD_MASK));
 		if (slotWithWritableHighRam != slot)
 			card.SetMainMemLanguageCardMemory();
 	}
