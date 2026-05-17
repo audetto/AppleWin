@@ -174,7 +174,7 @@ void Snapshot_GetDefaultFilenameAndPath(std::string& defaultFilename, std::strin
 	{
 		if (GetCardMgr().QuerySlot(i) == CT_GenericHDD)
 		{
-			dynamic_cast<HarddiskInterfaceCard&>(GetCardMgr().GetRef(SLOT7)).GetFilenameAndPathForSaveState(defaultFilename, defaultPath);
+			dynamic_cast<HarddiskInterfaceCard&>(GetCardMgr().GetRef(i)).GetFilenameAndPathForSaveState(defaultFilename, defaultPath);
 			if (!defaultFilename.empty())
 				break;
 		}
