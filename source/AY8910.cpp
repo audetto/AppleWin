@@ -784,7 +784,7 @@ void AY8913::sound_ay_write( int reg, int val, libspectrum_dword now )
   }
   else
   {
-    LogOutput("AY reg write discarded: %02X = %02X\n", reg, val);
+    // LogOutput("AY reg write discarded: %02X = %02X\n", reg, val);
   }
 }
 

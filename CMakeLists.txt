@@ -26,6 +26,19 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_compile_definitions("$<$<CONFIG:DEBUG>:_DEBUG>")
 add_compile_options(-Werror=return-type -Wno-switch)
 
+if (EMSCRIPTEN)
+  add_compile_options(
+    -fexceptions
+    -Oz
+  )
+
+  add_link_options(
+    -fexceptions
+    -sALLOW_MEMORY_GROWTH=1
+    -Oz
+  )
+endif()
+
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   add_compile_options(-Werror=format -Wno-error=format-overflow -Wno-error=format-truncation -Wno-psabi)
 endif()

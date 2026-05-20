@@ -34,11 +34,13 @@ namespace common2
     void PTreeRegistry::putString(const std::string &section, const std::string &key, const std::string &value)
     {
         myData[section][key] = value;
+        synchronise();
     }
 
     void PTreeRegistry::putDWord(const std::string &section, const std::string &key, const uint32_t value)
     {
         myData[section][key] = std::to_string(value);
+        synchronise();
     }
 
     const std::map<std::string, std::map<std::string, std::string>> &PTreeRegistry::getAllValues() const

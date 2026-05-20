@@ -76,7 +76,11 @@ namespace common2
         : CommonFrame(options)
     {
         // should this go down to LinuxFrame (maybe Initialisation?)
+#ifndef __EMSCRIPTEN__
         g_sProgramDir = getResourceFolder("bin").string() + PATH_SEPARATOR;
+#else
+        g_sProgramDir = "/home/web_user/disks/";
+#endif
         LogFileOutput("Program Dir: '%s'\n", g_sProgramDir.c_str());
     }
 
