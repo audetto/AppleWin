@@ -9,6 +9,7 @@
 #include "Speaker.h"
 #include "Riff.h"
 #include "CardManager.h"
+#include "Interface.h"
 
 namespace common2
 {
@@ -98,6 +99,20 @@ namespace common2
             {
                 LogFileOutput("Init: Failed to load custom F8 ROM: %s\n", options.customRomF8.c_str());
             }
+        }
+
+        if (!options.customRomVideo.empty())
+        {
+          if (!GetVideo().ReadVideoRomFile(options.customRomVideo.c_str()))
+          {
+            std::string msg = "Failed to load video rom (not found or not exactly 2/4/8/16KiB)";
+            LogFileOutput("%s\n", msg.c_str());
+            GetFrame().FrameMessageBox(msg.c_str(), "AppleWin Error", MB_OK);
+          }
+          else
+          {
+            GetVideo().SetVideoRomRockerSwitch(true);  // Use PAL char set
+          }
         }
 
         if (!options.wavFileSpeaker.empty())
