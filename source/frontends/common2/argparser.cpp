@@ -48,6 +48,8 @@ namespace
     constexpr int STATE_FILENAME = 1026;
     constexpr int LOAD_STATE = 1027;
 
+    constexpr int VIDEOROM = 1028;
+
     struct OptionData_t
     {
         const char *name;
@@ -196,6 +198,7 @@ namespace common2
                  {"memclear",                required_argument,    MEM_CLEAR,        "Memory initialization pattern [0..7]"},
                  {"rom",                     required_argument,    ROM,              "Custom 12k/16k ROM"},
                  {"f8rom",                   required_argument,    F8ROM,            "Custom 2k ROM"},
+                 {"videorom",                required_argument,    VIDEOROM,         "Custom Video ROM"},
              }},
             {"Audio",
              {
@@ -359,6 +362,11 @@ namespace common2
             case F8ROM:
             {
                 options.customRomF8 = optarg;
+                break;
+            }
+            case VIDEOROM:
+            {
+                options.customRomVideo = optarg;
                 break;
             }
             case NO_AUDIO:
