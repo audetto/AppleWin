@@ -4,6 +4,7 @@
 #include "linux/version.h"
 
 #include "frontends/common2/fileregistry.h"
+#include "frontends/common2/emscriptenpaths.h"
 #include "frontends/common2/commoncontext.h"
 #include "frontends/common2/argparser.h"
 #include "frontends/common2/programoptions.h"
@@ -34,20 +35,20 @@ namespace
     {
         namespace fs = std::filesystem;
 
-        const fs::path storage_path = "/storage/.config/applewin";
-        const fs::path default_path = "/defaults/.config/applewin";
-        const std::vector<std::string> config_files = {"applewin.yaml", "imgui.ini"};
+        const fs::path storagePath = std::string(common2::emscripten::STORAGE) + "/.config/applewin";
+        const fs::path defaultPath = std::string(common2::emscripten::DEFAULTS) + "/.config/applewin";
+        const std::vector<std::string> configFiles = {"applewin.yaml", "imgui.ini"};
 
         // Ensure the destination directory exists in IDBFS
-        if (!fs::exists(storage_path))
+        if (!fs::exists(storagePath))
         {
-            fs::create_directories(storage_path);
+            fs::create_directories(storagePath);
         }
 
-        for (const auto &file : config_files)
+        for (const auto &file : configFiles)
         {
-            const auto dst = storage_path / file;
-            const auto src = default_path / file;
+            const auto dst = storagePath / file;
+            const auto src = defaultPath / file;
 
             if (!fs::exists(dst))
             {

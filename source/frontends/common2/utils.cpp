@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "frontends/common2/utils.h"
 #include "frontends/common2/programoptions.h"
+#include "frontends/common2/emscriptenpaths.h"
 
 #include "SaveState.h"
 #include "Registry.h"
@@ -47,12 +48,14 @@ namespace common2
         const std::string profile = getEnvOrDefault("LOCALAPPDATA");
         return profile;
 #else
-        // https://specifications.freedesktop.org/basedir-spec/latest/
+
 #ifdef __EMSCRIPTEN__
-        const std::optional<std::string> xdgConfigHome = "/storage/.config";
+        const std::optional<std::string> xdgConfigHome = std::string(emscripten::STORAGE) + "/.config";
 #else
+        // https://specifications.freedesktop.org/basedir-spec/latest/
         const std::optional<std::string> xdgConfigHome = tryGetEnv("XDG_CONFIG_HOME");
 #endif
+
         if (xdgConfigHome.has_value())
         {
             return *xdgConfigHome;

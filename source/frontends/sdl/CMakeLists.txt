@@ -79,7 +79,6 @@ endif()
 
 
 set(SOURCE_FILES
-  em_js.cpp
   main.cpp
   gamepad.cpp
   sdirectsound.cpp

@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "frontends/sdl/processfile.h"
+#include "frontends/common2/emscriptenpaths.h"
 #include "frontends/sdl/sdlframe.h"
 #include "frontends/common2/utils.h"
 
@@ -138,7 +139,28 @@ namespace sa2
         }
         else
         {
+#ifdef __EMSCRIPTEN__
+            // copy disk image to persistent storatge so the config path survises page reloads
+            const std::filesystem::path sourcePath = filename;
+            const std::filesystem::path destPath =
+                std::filesystem::path(common2::emscripten::STORAGE) / "disks" / sourcePath.filename();
+
+            std::error_code ec;
+            std::filesystem::create_directories(destPath.parent_path(), ec);
+            std::filesystem::copy_file(sourcePath, destPath, std::filesystem::copy_options::overwrite_existing, ec);
+
+            if (ec)
+            {
+                insertDisk(frame, filename, dragAndDropSlot, dragAndDropDrive);
+                LogOutput("Failed to copy disk image to persistent storage: %s", ec.message().c_str());
+            }
+            else
+            {
+                insertDisk(frame, destPath.string().c_str(), dragAndDropSlot, dragAndDropDrive);
+            }
+#else
             insertDisk(frame, filename, dragAndDropSlot, dragAndDropDrive);
+#endif
         }
         frame->ResetSpeed();
     }
