@@ -11,7 +11,10 @@
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_opengl.h>
+
+#ifndef __EMSCRIPTEN__
 #include <SDL3_image/SDL_image.h>
+#endif
 
 #define ImGui_ImplSDLX_InitForOpenGL ImGui_ImplSDL3_InitForOpenGL
 #define ImGui_ImplSDLX_Shutdown ImGui_ImplSDL3_Shutdown

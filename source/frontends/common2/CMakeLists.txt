@@ -20,6 +20,7 @@ set(HEADER_FILES
   commonframe.h
   commoncontext.h
   controllerdoublepress.h
+  emscriptenpaths.h
   gnuframe.h
   fileregistry.h
   ptreeregistry.h

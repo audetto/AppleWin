@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "frontends/common2/gnuframe.h"
 #include "frontends/common2/utils.h"
+#include "frontends/common2/emscriptenpaths.h"
 #include "apple2roms_data.h"
 
 #ifdef __APPLE__
@@ -76,7 +77,11 @@ namespace common2
         : CommonFrame(options)
     {
         // should this go down to LinuxFrame (maybe Initialisation?)
+#ifndef __EMSCRIPTEN__
         g_sProgramDir = getResourceFolder("bin").string() + PATH_SEPARATOR;
+#else
+        g_sProgramDir = std::string(emscripten::DISKS) + PATH_SEPARATOR;
+#endif
         LogFileOutput("Program Dir: '%s'\n", g_sProgramDir.c_str());
     }
 

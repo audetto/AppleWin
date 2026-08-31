@@ -1,19 +1,34 @@
 #include "StdAfx.h"
 #include "frontends/common2/utils.h"
 #include "frontends/common2/programoptions.h"
+#include "frontends/common2/emscriptenpaths.h"
 
 #include "SaveState.h"
 #include "Registry.h"
 
+#include <iostream>
+
 namespace
 {
 
-    std::string getEnvOrDefault(const char *var, const char *fallback = nullptr)
+    std::optional<std::string> tryGetEnv(const char *var)
     {
         const char *value = getenv(var);
         if (value)
         {
-            return value;
+            std::cout << "Environment variable " << var << " = " << value << std::endl;
+            return std::string(value);
+        }
+        std::cout << "Environment variable " << var << " missing" << std::endl;
+        return std::nullopt;
+    }
+
+    std::string getEnvOrDefault(const char *var, const char *fallback = nullptr)
+    {
+        std::optional<std::string> value = tryGetEnv(var);
+        if (value.has_value())
+        {
+            return *value;
         }
         if (fallback)
         {
@@ -33,11 +48,21 @@ namespace common2
         const std::string profile = getEnvOrDefault("LOCALAPPDATA");
         return profile;
 #else
-        // https://specifications.freedesktop.org/basedir-spec/latest/
-        const std::filesystem::path home = getHomeDir();
-        const std::filesystem::path config = getEnvOrDefault("XDG_CONFIG_HOME", ".config");
 
-        return home / config;
+#ifdef __EMSCRIPTEN__
+        const std::optional<std::string> xdgConfigHome = std::string(emscripten::STORAGE) + "/.config";
+#else
+        // https://specifications.freedesktop.org/basedir-spec/latest/
+        const std::optional<std::string> xdgConfigHome = tryGetEnv("XDG_CONFIG_HOME");
+#endif
+
+        if (xdgConfigHome.has_value())
+        {
+            return *xdgConfigHome;
+        }
+
+        const std::filesystem::path home = getHomeDir();
+        return home / ".config";
 #endif
     }
 
