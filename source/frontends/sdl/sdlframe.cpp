@@ -411,7 +411,7 @@ namespace sa2
     void SDLFrame::ProcessDropEvent(const SDL_DropEvent &drop)
     {
         const auto file = SA2_DROP_FILE(drop);
-        printf("File dropped: %s\n", file);
+        LogOutput("File dropped: %s\n", file);
         processFile(this, file, myDragAndDropSlot, myDragAndDropDrive);
         sa2::compat::maybeSDLfree(file);
     }

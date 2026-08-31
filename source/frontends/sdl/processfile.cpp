@@ -151,8 +151,8 @@ namespace sa2
 
             if (ec)
             {
+                LogOutput("Failed to copy disk image to persistent storage: %s\n", ec.message().c_str());
                 insertDisk(frame, filename, dragAndDropSlot, dragAndDropDrive);
-                LogOutput("Failed to copy disk image to persistent storage: %s", ec.message().c_str());
             }
             else
             {
