@@ -80,7 +80,6 @@ HRESULT LinuxSoundBuffer::Lock(
     // No attempt is made at restricting write buffer not to overtake play cursor
     if (dwFlags & DSBLOCK_ENTIREBUFFER)
     {
-        myLastLockCursor = 0;
         *lplpvAudioPtr1 = this->mySoundBuffer.data();
         *lpdwAudioBytes1 = this->mySoundBuffer.size();
         if (lplpvAudioPtr2 && lpdwAudioBytes2)
@@ -92,7 +91,6 @@ HRESULT LinuxSoundBuffer::Lock(
     else
     {
         dwWriteCursor %= myBufferSize;
-        myLastLockCursor = dwWriteCursor;
 
         const DWORD availableInFirstPart = this->mySoundBuffer.size() - dwWriteCursor;
 
@@ -133,7 +131,9 @@ DWORD LinuxSoundBuffer::Read(
     }
 
     // Available bytes in the buffer
-    DWORD available = RingDistance(myPlayPosition, myWritePosition, myBufferSize);
+    const size_t playPos = myPlayPosition;
+    const size_t writePos = myWritePosition;
+    DWORD available = RingDistance(playPos, writePos, myBufferSize);
 
     // Count underruns if requested bytes exceed available
     if (available < dwReadBytes)
@@ -143,8 +143,8 @@ DWORD LinuxSoundBuffer::Read(
     }
 
     // First part before wrap
-    DWORD firstPart = myBufferSize - myPlayPosition;
-    *lplpvAudioPtr1 = mySoundBuffer.data() + myPlayPosition;
+    DWORD firstPart = myBufferSize - playPos;
+    *lplpvAudioPtr1 = mySoundBuffer.data() + playPos;
     *lpdwAudioBytes1 = std::min(firstPart, dwReadBytes);
 
     // Second part after wrap
@@ -163,14 +163,13 @@ DWORD LinuxSoundBuffer::Read(
     }
 
     // Advance play cursor
-    myPlayPosition = (myPlayPosition + dwReadBytes) % myBufferSize;
+    myPlayPosition = (playPos + dwReadBytes) % myBufferSize;
 
     return dwReadBytes;
 }
 
 DWORD LinuxSoundBuffer::GetBytesInBuffer() const
 {
-    const std::lock_guard<std::mutex> guard(myMutex);
     const DWORD available = RingDistance(this->myPlayPosition, this->myWritePosition, this->myBufferSize);
     return available;
 }

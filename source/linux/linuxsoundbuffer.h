@@ -12,9 +12,8 @@ class LinuxSoundBuffer : public SoundBuffer
 private:
     std::vector<uint8_t> mySoundBuffer;
 
-    size_t myPlayPosition = 0;
-    size_t myWritePosition = 0;
-    size_t myLastLockCursor = 0;
+    std::atomic<size_t> myPlayPosition = 0;
+    std::atomic<size_t> myWritePosition = 0;
     WORD myStatus = 0;
     LONG myVolume = 0;
 
