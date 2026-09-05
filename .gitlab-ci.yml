@@ -8,7 +8,7 @@
 .core-defs:
   variables:
     CORENAME: applewin
-    CORE_ARGS: '-DBUILD_LIBRETRO=ON -DENABLE_NETWORKING=OFF -G Ninja'
+    CORE_ARGS: "-DBUILD_LIBRETRO=ON -DENABLE_NETWORKING=OFF -G Ninja"
     GIT_SUBMODULE_STRATEGY: recursive
 
 # Inclusion templates, required for the build to work
@@ -16,38 +16,38 @@ include:
   ################################## DESKTOPS ################################
 
   # Windows
-  - project: 'libretro-infrastructure/ci-templates'
-    file: '/windows-cmake-mingw.yml'
+  - project: "libretro-infrastructure/ci-templates"
+    file: "/windows-cmake-mingw.yml"
 
   # Linux
-  - project: 'libretro-infrastructure/ci-templates'
-    file: '/linux-cmake.yml'
+  - project: "libretro-infrastructure/ci-templates"
+    file: "/linux-cmake.yml"
 
   # MacOS 64-bit
-  - project: 'libretro-infrastructure/ci-templates'
-    file: '/osx-cmake-x86.yml'
+  - project: "libretro-infrastructure/ci-templates"
+    file: "/osx-cmake-x86.yml"
 
   # MacOS ARM 64-bit
-  - project: 'libretro-infrastructure/ci-templates'
-    file: '/osx-cmake-arm64.yml'
+  - project: "libretro-infrastructure/ci-templates"
+    file: "/osx-cmake-arm64.yml"
 
   ################################## CELLULAR ################################
   # Android
-  - project: 'libretro-infrastructure/ci-templates'
-    file: '/android-cmake.yml'
+  - project: "libretro-infrastructure/ci-templates"
+    file: "/android-cmake.yml"
 
   # iOS
-  - project: 'libretro-infrastructure/ci-templates'
-    file: '/ios-cmake.yml'
+  - project: "libretro-infrastructure/ci-templates"
+    file: "/ios-cmake.yml"
 
   # tvOS (AppleTV)
-  - project: 'libretro-infrastructure/ci-templates'
-    file: '/tvos-cmake.yml'
+  - project: "libretro-infrastructure/ci-templates"
+    file: "/tvos-cmake.yml"
 
   #################################### MISC ##################################
   # webOS (LGTV)
-  - project: 'libretro-infrastructure/ci-templates'
-    file: '/webos-cmake.yml'
+  - project: "libretro-infrastructure/ci-templates"
+    file: "/webos-cmake.yml"
 
 # Stages for building
 stages:
@@ -65,7 +65,7 @@ libretro-build-windows-x64:
   extends:
     - .libretro-windows-cmake-x86_64
     - .core-defs
-  image: $CI_SERVER_HOST:5050/libretro-infrastructure/libretro-build-mxe-win-cross-cores:gcc10
+  image: $CI_SERVER_HOST:5050/libretro-infrastructure/libretro-build-mxe-win-cross-cores:gcc14
   before_script:
     - export NUMPROC=$(($(nproc)/5))
     - apt-get update -qy
@@ -76,7 +76,7 @@ libretro-build-windows-i686:
   extends:
     - .libretro-windows-cmake-x86
     - .core-defs
-  image: $CI_SERVER_HOST:5050/libretro-infrastructure/libretro-build-mxe-win-cross-cores:gcc10
+  image: $CI_SERVER_HOST:5050/libretro-infrastructure/libretro-build-mxe-win-cross-cores:gcc14
   before_script:
     - export NUMPROC=$(($(nproc)/5))
     - apt-get update -qy
@@ -94,6 +94,8 @@ libretro-build-linux-x64:
     - sudo apt-get -qy install $(cat source/frontends/libretro/xenial/packages.txt)
   variables:
     EXTRA_PATH: source/frontends/libretro
+    CC: /usr/bin/gcc-14
+    CXX: /usr/bin/g++-14
 
 # Linux 32-bit
 libretro-build-linux-i686:
@@ -115,6 +117,8 @@ libretro-build-linux-aarch64:
     - .core-defs
   variables:
     EXTRA_PATH: source/frontends/libretro
+    CC: /usr/bin/gcc-14
+    CXX: /usr/bin/g++-14
 
 # MacOS 64-bit
 libretro-build-osx-x64:
