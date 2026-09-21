@@ -861,6 +861,9 @@ namespace sa2
             ImGui::Text("GL Swap: %d", glSwap);
             ImGuiIO &io = ImGui::GetIO();
             ImGui::Text("FPS: %d", int(io.Framerate));
+
+            ImGui::Separator();
+            ImGui::Text("Built: %s %s", __DATE__, __TIME__);
         }
 
         ImGui::End();

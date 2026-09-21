@@ -4,6 +4,7 @@
 #include "linux/version.h"
 
 #include "frontends/common2/fileregistry.h"
+#include "frontends/common2/emscriptenpaths.h"
 #include "frontends/common2/commoncontext.h"
 #include "frontends/common2/argparser.h"
 #include "frontends/common2/programoptions.h"
@@ -28,6 +29,40 @@
 
 namespace
 {
+
+#ifdef __EMSCRIPTEN__
+    void setupPersistentConfig()
+    {
+        namespace fs = std::filesystem;
+
+        const fs::path storagePath = std::string(common2::emscripten::STORAGE) + "/.config/applewin";
+        const fs::path defaultPath = std::string(common2::emscripten::DEFAULTS) + "/.config/applewin";
+        const std::vector<std::string> configFiles = {"applewin.yaml", "imgui.ini"};
+
+        // Ensure the destination directory exists in IDBFS
+        if (!fs::exists(storagePath))
+        {
+            fs::create_directories(storagePath);
+        }
+
+        for (const auto &file : configFiles)
+        {
+            const auto dst = storagePath / file;
+            const auto src = defaultPath / file;
+
+            if (!fs::exists(dst))
+            {
+                std::cerr << "Restoring default config: " << file << std::endl;
+                std::error_code ec;
+                fs::copy_file(src, dst, fs::copy_options::overwrite_existing, ec);
+                if (ec)
+                {
+                    std::cerr << "Failed to copy " << file << ": " << ec.message() << std::endl;
+                }
+            }
+        }
+    }
+#endif
 
     int getRefreshRate()
     {
@@ -60,6 +95,10 @@ namespace
             {
                 myFrame = std::make_shared<sa2::SDLRendererFrame>(options);
             }
+
+#ifdef __EMSCRIPTEN__
+            SDL_SetHint(SDL_HINT_EMSCRIPTEN_KEYBOARD_ELEMENT, "#canvas");
+#endif
 
             std::cerr << "GL swap interval: " << sa2::compat::getGLSwapInterval() << std::endl;
 
@@ -199,6 +238,11 @@ extern "C"
             const std::string version = getVersion();
             SDL_SetAppMetadata("AppleWin", version.c_str(), "org.applewin");
 #endif
+
+#ifdef __EMSCRIPTEN__
+            setupPersistentConfig();
+#endif
+
             return SDL_AppCreate(appstate, argc, argv);
         }
         catch (const std::exception &e)
