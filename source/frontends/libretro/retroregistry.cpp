@@ -25,6 +25,7 @@ namespace
     const char *REGVALUE_KEYBOARD_TYPE = "Keyboard type";
     const char *REGVALUE_PLAYLIST_START = "Playlist start";
     const char *REGVALUE_FLOPPY_MULTI_DRIVE = "Floppy multidrive";
+    const char *REGVALUE_FLOPPY_WRITE_PROTECT = "Floppy write protect";
     const char *REGVALUE_DISK_CONTROL_DRIVE = "Disk control drive";
     const char *REGVALUE_MOUSE_SPEED_00 = "Mouse speed";
 
@@ -338,6 +339,19 @@ namespace
         },
         {
             {
+                "floppy_write_protect",
+                "Write-protect Game Disks",
+                CATEGORY_DISK_CONTROL,
+                {
+                    {"enabled", 1},
+                    {"disabled", 0},
+                },
+            },
+            REG_RA2,
+            REGVALUE_FLOPPY_WRITE_PROTECT,
+        },
+        {
+            {
                 "keyboard_type",
                 "Keyboard Type",
                 CATEGORY_INPUT,
@@ -595,6 +609,13 @@ namespace ra2
     {
         uint32_t value = 0;
         RegLoadValue(REG_RA2, REGVALUE_FLOPPY_MULTI_DRIVE, true, &value);
+        return value != 0;
+    }
+
+    bool getFloppyWriteProtect()
+    {
+        uint32_t value = 1;
+        RegLoadValue(REG_RA2, REGVALUE_FLOPPY_WRITE_PROTECT, true, &value);
         return value != 0;
     }
 

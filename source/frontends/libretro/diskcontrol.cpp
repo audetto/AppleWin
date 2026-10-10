@@ -21,6 +21,40 @@ namespace
 
     const std::string SAVEDISK_LABEL("Save Disk ");
 
+    // Game disks are write-protected unless the option lets a game write to them
+    bool gameDiskWriteProtection()
+    {
+        return ra2::getFloppyWriteProtect() ? IMAGE_FORCE_WRITE_PROTECTED : IMAGE_USE_FILES_WRITE_PROTECT_STATUS;
+    }
+
+    // A game disk that may be written is used from a copy in the save folder, so
+    // the original keeps the checksum RetroAchievements identifies the game by
+    bool copyToSaveFolder(const std::string &path, std::string &copyPath, bool &created)
+    {
+        created = false;
+        if (ra2::save_directory.empty())
+        {
+            return false;
+        }
+
+        const std::filesystem::path original(path);
+        const std::filesystem::path copy = std::filesystem::path(ra2::save_directory) / original.filename();
+        std::error_code error;
+        if (!std::filesystem::exists(copy, error))
+        {
+            if (!std::filesystem::copy_file(original, copy, error))
+            {
+                return false;
+            }
+            std::filesystem::permissions(
+                copy, std::filesystem::perms::owner_write, std::filesystem::perm_options::add, error);
+            created = true;
+        }
+
+        copyPath = copy.string();
+        return true;
+    }
+
     bool startsWith(const std::string &value, const std::string &prefix)
     {
         if (prefix.size() > value.size())
@@ -93,7 +127,7 @@ namespace ra2
 
     bool DiskControl::insertDisk(const Drive_e drive, const std::string &path)
     {
-        const bool writeProtected = IMAGE_FORCE_WRITE_PROTECTED;
+        const bool writeProtected = gameDiskWriteProtection();
         const bool createIfNecessary = IMAGE_DONT_CREATE;
 
         if (insertFloppyDisk(drive, path, writeProtected, createIfNecessary))
@@ -182,7 +216,7 @@ namespace ra2
                 {
                     imagePath = parent / imagePath;
                 }
-                myImages.push_back({imagePath.string(), label, IMAGE_FORCE_WRITE_PROTECTED, IMAGE_DONT_CREATE, false});
+                myImages.push_back({imagePath.string(), label, gameDiskWriteProtection(), IMAGE_DONT_CREATE, false});
             }
         }
 
@@ -234,15 +268,31 @@ namespace ra2
 
         if (disk2Card)
         {
-            const ImageError_e error = disk2Card->InsertDisk(drive, path, writeProtected, createIfNecessary);
+            std::string diskPath = path;
+            bool diskWriteProtected = writeProtected;
+            bool created = false;
+            // save disks are created in the save folder already
+            if (!writeProtected && !createIfNecessary && !copyToSaveFolder(path, diskPath, created))
+            {
+                diskWriteProtected = IMAGE_FORCE_WRITE_PROTECTED;
+            }
+
+            const ImageError_e error = disk2Card->InsertDisk(drive, diskPath, diskWriteProtected, createIfNecessary);
             const bool result = (error == eIMAGE_ERROR_NONE);
 
-            ra2::log_cb(RETRO_LOG_INFO, "Insert into drive %d: %s -> %d\n", drive + 1, path.c_str(), result);
+            ra2::log_cb(RETRO_LOG_INFO, "Insert into drive %d: %s -> %d\n", drive + 1, diskPath.c_str(), result);
 
             if (result)
             {
-                storeCurrentDiskFolder(path);
+                storeCurrentDiskFolder(diskPath);
                 return true;
+            }
+
+            if (created)
+            {
+                // not a floppy image, so no copy is needed
+                std::error_code removeError;
+                std::filesystem::remove(diskPath, removeError);
             }
         }
 
@@ -354,7 +404,7 @@ namespace ra2
 
             myImages[index].path = filePath.string();
             myImages[index].label = filePath.stem().string();
-            myImages[index].writeProtected = IMAGE_FORCE_WRITE_PROTECTED;
+            myImages[index].writeProtected = gameDiskWriteProtection();
             myImages[index].createIfNecessary = IMAGE_DONT_CREATE;
             return true;
         }

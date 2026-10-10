@@ -115,3 +115,4 @@ Save disks (`#SAVEDISK:`) are never auto-inserted into DRIVE_2.
 | Disk Control Drive | Drive 1, 2 | Active drive for the Disk Control Interface. |
 | Playlist Start Disk | First, Previous | Whether to start from disk 1 or resume from the previously used disk |
 | Floppy MultiDrive | Disabled, Enabled | Auto-insert second disk into DRIVE_2 for all playlists |
+| Write-protect Game Disks | Enabled, Disabled | When disabled, a game can save to its own disks: each disk is copied to the save folder and written there, and the original image is left unchanged |
