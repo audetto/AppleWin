@@ -94,8 +94,10 @@ static uint32_t joytype[JN_NUM] = { kJoystick_Default[JN_JOYSTICK0], kJoystick_D
 
 static bool  setbutton[3]   = {false, false, false};	// Used when a mouse button is pressed/released
 
-static int   xpos[2]        = { PDL_MAX,PDL_MAX };
-static int   ypos[2]        = { PDL_MAX,PDL_MAX };
+// Start with joystick in central position so a mouse (as joystick) doesn't return 255 before WM_MOUSEMOVE events (GH#1522)
+// . NB. JoyReadPosition() handles the case when there's no joystick (DEVICE_NONE) to allow code to detect this.
+static int xpos[2] = { PDL_CENTRAL,PDL_CENTRAL };
+static int ypos[2] = { PDL_CENTRAL,PDL_CENTRAL };
 
 static UINT64 g_paddleInactiveCycle[4] = { 0 };	// Abs cycle that each paddle becomes inactive after PTRIG strobe
 
@@ -576,7 +578,7 @@ static bool CheckButton0Pressed()
 {
 	bool pressed =	joybutton[0] ||
 					setbutton[0] ||
-					keydown[JK_OPENAPPLE];
+					keydown[JK_OPENAPPLE];		// Permit for Apple II (eg. needed for "Keyboard (cursors)")
 
 	if (joyinfo[joytype[1]] != DEVICE_KEYBOARD)	// NB. always joytype[1] regardless if button is 0 or 1
 		pressed = pressed || keydown[JK_BUTTON0];
@@ -588,7 +590,7 @@ static bool CheckButton1Pressed()
 {
 	bool pressed =	joybutton[1] ||
 					setbutton[1] ||
-					keydown[JK_CLOSEDAPPLE];
+					keydown[JK_CLOSEDAPPLE];	// Permit for Apple II (eg. needed for "Keyboard (cursors)")
 
 	if (joyinfo[joytype[1]] != DEVICE_KEYBOARD)	// NB. always joytype[1] regardless if button is 0 or 1
 		pressed = pressed || keydown[JK_BUTTON1];
@@ -624,6 +626,8 @@ BYTE __stdcall JoyReadButton(WORD pc, WORD address, BYTE, BYTE, ULONG nExecutedC
 				DoAutofire(button0, pressed);
 				if (CopyProtectionDonglePB0() >= 0)				//If a copy protection dongle needs PB0, this overrides the joystick
 					pressed = CopyProtectionDonglePB0();
+				else if (IsApple2PlusOrClone(g_Apple2Type) && joyinfo[joytype[0]] == DEVICE_NONE)
+					pressed = 1;	// Apple II: PB0 floats high when nothing is connected to this switch (GH#1234)
 			}
 			break;
 
@@ -634,17 +638,22 @@ BYTE __stdcall JoyReadButton(WORD pc, WORD address, BYTE, BYTE, ULONG nExecutedC
 				DoAutofire(button1, pressed);
 				if (CopyProtectionDonglePB1() >= 0)				//If a copy protection dongle needs PB1, this overrides the joystick
 					pressed = CopyProtectionDonglePB1();
-			}
+				else if (IsApple2PlusOrClone(g_Apple2Type) && joyinfo[joytype[0]] == DEVICE_NONE)
+					pressed = 1;	// Apple II: PB1 floats high when nothing is connected to this switch (GH#1234)
+		}
 			break;
 
 		case 0x63:
 			if (CopyProtectionDonglePB2() >= 0)					//If a copy protection dongle needs PB2, this overrides the joystick
-				pressed = CopyProtectionDonglePB2();
-			else if (IS_APPLE2 && (joyinfo[joytype[1]] == DEVICE_NONE))
 			{
-				// Apple II/II+ with no joystick has the "SHIFT key mod"
-				// See Sather's Understanding The Apple II p7-36
-				pressed = !(GetKeyState(VK_SHIFT) < 0);
+				pressed = CopyProtectionDonglePB2();
+			}
+			else if (joyinfo[joytype[1]] == DEVICE_NONE)
+			{
+				if (GetPropertySheet().GetShiftKeyMod())
+					pressed = !(GetKeyState(VK_SHIFT) < 0);		// With no joystick *and* has the "SHIFT key mod"
+				else
+					pressed = 1;	// Apple II/II+ or //e: PB2 floats high when nothing is connected to this switch (GH#1234)
 			}
 			else
 			{
@@ -876,6 +885,14 @@ bool JoySetEmulationType(HWND window, uint32_t newtype, int nJoystickNumber, con
   return true;
 }
 
+void JoyUnplug(bool unplugJoystick0, bool unplugJoystick1)
+{
+	if (unplugJoystick0)
+		joytype[JN_JOYSTICK0] = J0C_DISABLED;
+
+	if (unplugJoystick1)
+		joytype[JN_JOYSTICK1] = J1C_DISABLED;
+}
 
 //===========================================================================
 

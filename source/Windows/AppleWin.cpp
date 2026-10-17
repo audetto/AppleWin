@@ -737,6 +737,9 @@ static void RepeatInitialization()
 	JoyInitialize();
 	LogFileOutput("Main: JoyInitialize()\n");
 
+	JoyUnplug(g_cmdLine.noJoystick[0], g_cmdLine.noJoystick[1]);
+	g_cmdLine.noJoystick[0] = g_cmdLine.noJoystick[1] = false;
+
 	// Init palette color
 	VideoSwitchVideocardPalette(RGB_GetVideocard(), GetVideo().GetVideoType());
 
@@ -810,6 +813,11 @@ static void RepeatInitialization()
 			const SSI263Type type = g_cmdLine.slotInfo[i].socketSC01;
 			if (type != SSI263Unknown)
 				dynamic_cast<MockingboardCard&>(GetCardMgr().GetRef(i)).SetSocketSC01(type);
+		}
+		else if (GetCardMgr().QuerySlot(i) == CT_SSC)
+		{
+			if (g_cmdLine.sscTcpPort)
+				dynamic_cast<CSuperSerialCard&>(GetCardMgr().GetRef(i)).SetTcpPort(g_cmdLine.sscTcpPort);
 		}
 	}
 
