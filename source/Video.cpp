@@ -872,7 +872,7 @@ void Video::VideoRefreshBuffer(uint32_t uRedrawWholeScreenVideoMode, bool bRedra
 
 void Video::ClearFrameBuffer()
 {
-	UINT32* frameBuffer = (UINT32*)GetFrameBuffer();
+	bgra_t* frameBuffer = (bgra_t*)GetFrameBuffer();
 	std::fill(frameBuffer, frameBuffer + GetFrameBufferWidth() * GetFrameBufferHeight(), OPAQUE_BLACK);
 }
 

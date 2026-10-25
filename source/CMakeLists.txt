@@ -5,7 +5,7 @@ option(ENABLE_NETWORKING "Enable networking support (SLIRP/PCAP)" ON)
 set(SLIRP_FOUND "0")
 set(PCAP_FOUND "0")
 
-if (ENABLE_NETWORKING AND NOT WIN32 AND NOT IOS)
+if (ENABLE_NETWORKING AND NOT WIN32 AND NOT IOS AND NOT EMSCRIPTEN)
   pkg_search_module(SLIRP slirp)
 
   # if slirp is not found, we will try pcap

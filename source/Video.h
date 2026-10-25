@@ -5,10 +5,37 @@
 // Windows
 // SDL (SDL_PIXELFORMAT_ARGB8888)
 // Qt (QImage::Format_ARGB32_Premultiplied)
+// TODO: Replace with WinGDI.h / RGBQUAD
+
+struct bgra_t
+{
+#ifdef __EMSCRIPTEN__
+	uint8_t r;
+	uint8_t g;
+	uint8_t b;
+	uint8_t a; // reserved on Win32
+#else
+	uint8_t b;
+	uint8_t g;
+	uint8_t r;
+	uint8_t a; // reserved on Win32
+#endif
+};
+
+constexpr bgra_t makeBGRA(uint8_t b, uint8_t g, uint8_t r, uint8_t a)
+{ 
+	bgra_t bgra{};
+	bgra.b = b;
+	bgra.g = g;
+	bgra.r = r;
+	bgra.a = a;
+	return bgra;
+}
+
 #define ALPHA 0xFF  // fully opaque
 #define ALPHA32_MASK (ALPHA << 24)
-#define SETRGBCOLOR(r, g, b) {b, g, r, ALPHA}  // to create a RGBQUAD
-#define OPAQUE_BLACK (0 | ALPHA32_MASK)  // Black is RGB 0 0 0
+#define SETRGBCOLOR(r, g, b) makeBGRA(b, g, r, ALPHA)
+#define OPAQUE_BLACK SETRGBCOLOR(0, 0, 0)  // Black is RGB 0 0 0
 
 
 // Types ____________________________________________________________
@@ -96,15 +123,6 @@ enum AppleFont_e
 
 // turn on struct member padding
 #pragma pack(push,1)
-
-// TODO: Replace with WinGDI.h / RGBQUAD
-struct bgra_t
-{
-	uint8_t b;
-	uint8_t g;
-	uint8_t r;
-	uint8_t a; // reserved on Win32
-};
 
 struct WinBmpHeader_t
 {
