@@ -54,10 +54,6 @@ int LinuxFrame::SetViewportScale(int nNewScale, bool /* bForce */)
     return nNewScale;
 }
 
-void LinuxFrame::SetAltEnterToggleFullScreen(bool /* mode */)
-{
-}
-
 void LinuxFrame::SetLoadedSaveStateFlag(const bool /* bFlag */)
 {
 }

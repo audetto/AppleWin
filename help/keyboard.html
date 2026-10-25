@@ -82,21 +82,21 @@
 			Paste text from Windows' clipboard. Text gets fed a character at a time to the 
 			Apple's keyboard hardware. The 'CR+LF' combination gets converted to CR.</p>
 		<p><span style="font-weight: bold;">PrintScrn:</span><br>
-			Save Apple screen to bitmap. The file is saved to the last directory you opened a disk image from. The default resolution is 560x384. Use 
+			Save Apple screen to png file. The file is saved to the last directory you opened a disk image from. The default resolution is 560x384. Use 
 			<span style="font-style: italic;">Shift+PrintScrn</span> 
-			to save a 280x192 bitmap. The filename
+			to save a 280x192 image. The filename
 			generated depends if you have a floppy inserted in drive-1 or not. If you do then
-			files are named "{DiskFilename}_#.bmp" otherwise they are named "AppleWin_ScreenShot_#.bmp".</p>
+			files are named "{DiskFilename}_#.png" otherwise they are named "AppleWin_ScreenShot_#.png".</p>
 		<p><span style="font-weight: bold;">Shift+PrintScrn:</span><br>
 		    See above.</p>
 		<p><span style="font-weight: bold;">Ctrl+PrintScrn:</span><br>
 		    Copy the text screen (auto detect 40/80 columns) to the clipboard.</p>
 		<p><span style="font-weight: bold;">Alt+Enter:</span><br>
-		    Default: Toggle between windowed and full screen video modes. (NB. Will conflict with emulation and prevent Open Apple + Enter from being readable. Use the <a href="CommandLine.html">Command Line</a> switch to allow Open Apple + Enter to be readable.)</p>
+		    Default: Toggle between windowed and full-screen video modes. (NB. Will conflict with emulation and prevent Open Apple + Enter from being readable. Use the <a href="cfg-input.html">Input</a> tab or <a href="CommandLine.html">Command Line</a> switch to allow Open Apple + Enter to be readable.)</p>
 		<p><span style="font-weight: bold;">Alt+Tab:</span><br>
-		    Default: Switch between application-level windows. (NB. Will conflict with emulation and prevent Open Apple + Tab from being readable. Use the <a href="CommandLine.html">Command Line</a> switch to allow Open Apple + Tab to be readable.)</p>
+		    Default: Switch between application-level windows. (NB. Will conflict with emulation and prevent Open Apple + Tab from being readable. Use the <a href="cfg-input.html">Input</a> tab or <a href="CommandLine.html">Command Line</a> switch to allow Open Apple + Tab to be readable.)</p>
 		<p><span style="font-weight: bold;">Alt+Esc, Alt+Space and Ctrl+Esc:</span><br>
-		    Default: AppleWin hooks these keyboard shortcuts preventing Windows from detecting them. (NB. Use the <a href="CommandLine.html">Command Line</a> switch to allow Windows to detect them.)</p>
+		    Default: Windows hooks these system keyboard shortcuts preventing AppleWin from detecting them. (NB. Use the <a href="cfg-input.html">Input</a> tab or <a href="CommandLine.html">Command Line</a> switch to allow AppleWin to detect them.)</p>
 		<p><span style="font-weight: bold;">Ctrl+Left Mouse Button:</span><br>
 			This will show the Windows mouse cursor when emulating an Apple joystick with the PC's mouse or using a Mouse card.<br>
 		<p><span style="font-weight: bold;">Function Keys F1-F8:</span><br>

@@ -40,6 +40,7 @@ struct CmdLine
 		bBoot = false;
 		bSlot7EmptyOnExit = false;
 		bSwapButtons0and1 = false;
+		noJoystick[0] = noJoystick [1]= false;
 		bRemoveNoSlotClock = false;
 		snesMaxAltControllerType[0] = false;
 		snesMaxAltControllerType[1] = false;
@@ -70,6 +71,7 @@ struct CmdLine
 		auxSlotCard = CT_Undefined;
 		sBootSectorFileName = "";
 		nBootSectorFileSize = 0;
+		sscTcpPort = 0;
 
 		for (UINT i = SLOT0; i < NUM_SLOTS; i++)
 		{
@@ -87,6 +89,7 @@ struct CmdLine
 	bool bBoot;
 	bool bSlot7EmptyOnExit;
 	bool bSwapButtons0and1;
+	bool noJoystick[2];
 	bool bRemoveNoSlotClock;
 	bool snesMaxAltControllerType[2];
 	bool supportDCD;
@@ -125,6 +128,7 @@ struct CmdLine
 	std::string sBootSectorFileName;
 	size_t nBootSectorFileSize;
 	std::string debuggerAutoRunScriptFilename;
+	USHORT sscTcpPort;
 };
 
 bool ProcessCmdLine(LPSTR lpCmdLine);
@@ -135,4 +139,5 @@ extern bool g_bRegisterFileTypes;
 extern bool g_bHookSystemKey;
 extern bool g_bHookAltTab;
 extern bool g_bHookAltGrControl;
+extern bool g_configAltEnterForEmulation;
 extern CmdLine g_cmdLine;

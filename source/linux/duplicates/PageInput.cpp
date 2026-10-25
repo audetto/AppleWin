@@ -20,4 +20,13 @@ void CPageInput::ResetToDefault()
 {
 }
 
+void CPageInput::SetShiftKeyModDefault(const eApple2Type type)
+{
+}
+
+bool CPageInput::GetShiftKeyModDefault(const eApple2Type type)
+{
+    return false;
+}
+
 CPageInput *CPageInput::ms_this = nullptr;

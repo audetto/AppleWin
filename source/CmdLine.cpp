@@ -45,9 +45,10 @@ std::string g_sConfigFile; // INI file to use instead of Registry
 
 bool g_bCapturePrintScreenKey = true;
 bool g_bRegisterFileTypes = true;
-bool g_bHookSystemKey = true;
+bool g_bHookSystemKey = false;
 bool g_bHookAltTab = false;
 bool g_bHookAltGrControl = false;
+bool g_configAltEnterForEmulation = false;	// Alt+Enter defaults to toggling full screen
 
 
 static LPSTR GetCurrArg(LPSTR lpCmdLine)
@@ -529,16 +530,22 @@ bool ProcessCmdLine(LPSTR lpCmdLine)
 		{
 			GetFrame().SetShowPrintScreenWarningDialog(false);
 		}
+		else if (strcmp(lpCmdLine, "-hook-system-key") == 0)		// Hook the System keys (eg. Left-ALT+ESC/SPACE/TAB) GH#1532
+		{
+			g_bHookSystemKey = true;
+		}
 		else if (strcmp(lpCmdLine, "-no-hook-system-key") == 0)		// Don't hook the System keys (eg. Left-ALT+ESC/SPACE/TAB) GH#556
 		{
 			g_bHookSystemKey = false;
 		}
 		else if (strcmp(lpCmdLine, "-hook-alt-tab") == 0)			// GH#556
 		{
+			g_bHookSystemKey = true;
 			g_bHookAltTab = true;
 		}
 		else if (strcmp(lpCmdLine, "-hook-altgr-control") == 0)		// GH#556
 		{
+			g_bHookSystemKey = true;
 			g_bHookAltGrControl = true;
 		}
 		else if (strcmp(lpCmdLine, "-altgr-sends-wmchar") == 0)		// GH#625
@@ -566,6 +573,15 @@ bool ProcessCmdLine(LPSTR lpCmdLine)
 		else if (strcmp(lpCmdLine, "-swap-buttons") == 0)
 		{
 			g_cmdLine.bSwapButtons0and1 = true;
+		}
+#define CMD_NO_JOYSTICK "-no-joystick"	// -no-joystick<1|2>
+		else if (strncmp(lpCmdLine, CMD_NO_JOYSTICK, sizeof(CMD_NO_JOYSTICK)-1) == 0)
+		{
+			const int n = lpCmdLine[sizeof(CMD_NO_JOYSTICK) - 1] - '1';	// NB. 1-based
+			if (n == 0 || n == 1)
+				g_cmdLine.noJoystick[n] = true;
+			else
+				LogFileOutput("-no-joystick: unsupported device: %s\n", lpCmdLine);
 		}
 		else if (strcmp(lpCmdLine, "-spkr-inc") == 0)
 		{
@@ -599,11 +615,11 @@ bool ProcessCmdLine(LPSTR lpCmdLine)
 		}
 		else if (strcmp(lpCmdLine, "-alt-enter=toggle-full-screen") == 0)	// GH#556
 		{
-			GetFrame().SetAltEnterToggleFullScreen(true);
+			g_configAltEnterForEmulation = false;
 		}
 		else if (strcmp(lpCmdLine, "-alt-enter=open-apple-enter") == 0)		// GH#556
 		{
-			GetFrame().SetAltEnterToggleFullScreen(false);
+			g_configAltEnterForEmulation = true;
 		}
 		else if (strcmp(lpCmdLine, "-video-mode=idealized") == 0)			// GH#616
 		{
@@ -811,6 +827,18 @@ bool ProcessCmdLine(LPSTR lpCmdLine)
 			lpNextArg = GetNextArg(lpNextArg);
 
 			g_cmdLine.debuggerAutoRunScriptFilename = lpCmdLine;
+		}
+		else if (strcmp(lpCmdLine, "-ssc-tcp-port") == 0)
+		{
+			lpCmdLine = GetCurrArg(lpNextArg);
+			lpNextArg = GetNextArg(lpNextArg);
+
+			UINT port = atoi(lpCmdLine);
+
+			if (port <= 0xffff)
+				g_cmdLine.sscTcpPort = (USHORT) port;
+			else
+				LogFileOutput("ERROR: SSC TCP Port out of range: %s\n", lpCmdLine);
 		}
 		else	// unsupported
 		{

@@ -25,7 +25,6 @@ public:
     bool GetBestDisplayResolutionForFullScreen(
         UINT &bestWidth, UINT &bestHeight, UINT userSpecifiedWidth = 0, UINT userSpecifiedHeight = 0) override;
     int SetViewportScale(int nNewScale, bool bForce = false) override;
-    void SetAltEnterToggleFullScreen(bool mode) override;
 
     void SetLoadedSaveStateFlag(const bool bFlag) override;
 
