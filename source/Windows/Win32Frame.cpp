@@ -106,7 +106,6 @@ Win32Frame::Win32Frame()
 	g_hLogoBitmap = (HBITMAP)0;
 	g_hDeviceBitmap = (HBITMAP)0;
 	g_hDeviceDC = (HDC)0;
-	g_bAltEnter_ToggleFullScreen = true;	// Alt+Enter defaults to toggling full screen
 	g_bIsFullScreen = false;
 	g_bShowingCursor = true;
 	g_bLastCursorInAppleViewport = false;
@@ -655,8 +654,8 @@ Win32Frame& Win32Frame::GetWin32Frame()
 
 int Win32Frame::FrameMessageBox(LPCSTR lpText, LPCSTR lpCaption, UINT uType)
 {
-	const HWND handle = g_hFrameWindow ? g_hFrameWindow : GetDesktopWindow();
-	return MessageBox(handle, lpText, lpCaption, uType);
+	const HWND hWnd = g_hFrameWindow ? g_hFrameWindow : GetDesktopWindow();
+	return MessageBox(hWnd, lpText, lpCaption, uType);
 }
 
 void Win32Frame::GetBitmap(WORD id, LONG cb, LPVOID lpvBits)

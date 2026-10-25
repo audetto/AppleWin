@@ -179,36 +179,47 @@ void LoadConfiguration(bool loadImages)
 
 	uint32_t dwTmp = 0;
 
-	if(REGLOAD(REGVALUE_FS_SHOW_SUBUNIT_STATUS, &dwTmp))
+	if (REGLOAD(REGVALUE_FS_SHOW_SUBUNIT_STATUS, &dwTmp))
 		GetFrame().SetFullScreenShowSubunitStatus(dwTmp != 0);
 
 	if (REGLOAD(REGVALUE_SHOW_DISKII_STATUS, &dwTmp))
 		GetFrame().SetWindowedModeShowDiskiiStatus(dwTmp != 0);
 
-	if(REGLOAD(REGVALUE_THE_FREEZES_F8_ROM, &dwTmp))
+	if (REGLOAD(REGVALUE_THE_FREEZES_F8_ROM, &dwTmp))
 		GetPropertySheet().SetTheFreezesF8Rom(dwTmp);
 
-	if(REGLOAD(REGVALUE_SAVE_STATE_ON_EXIT, &dwTmp))
+	if (REGLOAD(REGVALUE_SAVE_STATE_ON_EXIT, &dwTmp))
 		SetSaveStateOnExit(dwTmp != 0);
 
-	if(REGLOAD(REGVALUE_PDL_XTRIM, &dwTmp))
+	if (REGLOAD(REGVALUE_PDL_XTRIM, &dwTmp))
 		JoySetTrim((short)dwTmp, true);
-	if(REGLOAD(REGVALUE_PDL_YTRIM, &dwTmp))
+	if (REGLOAD(REGVALUE_PDL_YTRIM, &dwTmp))
 		JoySetTrim((short)dwTmp, false);
 
-	if(REGLOAD(REGVALUE_SCROLLLOCK_TOGGLE, &dwTmp))
+	if (REGLOAD(REGVALUE_SCROLLLOCK_TOGGLE, &dwTmp))
 		GetPropertySheet().SetScrollLockToggle(dwTmp);
 
-	if(REGLOAD(REGVALUE_CURSOR_CONTROL, &dwTmp))
+	if (REGLOAD(REGVALUE_CURSOR_CONTROL, &dwTmp))
 		GetPropertySheet().SetJoystickCursorControl(dwTmp);
-	if(REGLOAD(REGVALUE_AUTOFIRE, &dwTmp))
+	if (REGLOAD(REGVALUE_AUTOFIRE, &dwTmp))
 		GetPropertySheet().SetAutofire(dwTmp);
-	if(REGLOAD(REGVALUE_SWAP_BUTTONS_0_AND_1, &dwTmp))
+	if (REGLOAD(REGVALUE_SWAP_BUTTONS_0_AND_1, &dwTmp))
 		GetPropertySheet().SetButtonsSwapState(dwTmp != 0);
-	if(REGLOAD(REGVALUE_CENTERING_CONTROL, &dwTmp))
+	if (REGLOAD(REGVALUE_CENTERING_CONTROL, &dwTmp))
 		GetPropertySheet().SetJoystickCenteringControl(dwTmp);
+	if (REGLOAD_DEFAULT(REGVALUE_SHIFT_KEY_MOD, &dwTmp, false))
+		GetPropertySheet().SetShiftKeyMod(dwTmp);
 
-	if(REGLOAD(REGVALUE_MOUSE_CROSSHAIR, &dwTmp))
+	if (REGLOAD_DEFAULT(REGVALUE_HOOK_SYSTEM_KEYS, &dwTmp, false))
+		GetPropertySheet().SetHookSystemKeys(dwTmp);	// Can be overridden by cmd line -hook-system-key
+	if (REGLOAD_DEFAULT(REGVALUE_HOOK_ALT_TAB, &dwTmp, false))
+		GetPropertySheet().SetHookAltTab(dwTmp);		// Can be overridden by cmd line -hook-alt-tab
+	if (REGLOAD_DEFAULT(REGVALUE_HOOK_ALTGR_CONTROL, &dwTmp, false))
+		GetPropertySheet().SetHookAltGrControl(dwTmp);	// Can be overridden by cmd line -hook-altgr-control
+	if (REGLOAD_DEFAULT(REGVALUE_HOOK_ALT_ENTER, &dwTmp, false))
+		GetPropertySheet().SetHookAltEnterForEmulation(dwTmp);	// Can be overridden by cmd line -alt-enter=<...>
+
+	if (REGLOAD(REGVALUE_MOUSE_CROSSHAIR, &dwTmp))
 		GetPropertySheet().SetMouseShowCrosshair(dwTmp);
 	if(REGLOAD(REGVALUE_MOUSE_RESTRICT_TO_WINDOW, &dwTmp))
 		GetPropertySheet().SetMouseRestrictToWindow(dwTmp);

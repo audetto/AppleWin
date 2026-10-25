@@ -70,8 +70,8 @@ static YamlHelper yamlHelper;
 
 #define UNIT_SLOTS_VER 1
 
-// See CopyProtectionDongle.cppS
-#define UNIT_GAME_IO_CONNECTOR_VER 3
+// See CopyProtectionDongle.cpp
+#define UNIT_GAME_IO_CONNECTOR_VER 4
 
 #define UNIT_MISC_VER 1
 
@@ -296,6 +296,8 @@ static void ParseUnitApple2(YamlLoadHelper& yamlLoadHelper, UINT version)
 	SpkrLoadSnapshot(yamlLoadHelper);
 	GetVideo().VideoLoadSnapshot(yamlLoadHelper, version);
 	MemLoadSnapshot(yamlLoadHelper, version);
+
+	GetPropertySheet().SetShiftKeyModDefault(g_Apple2Type);	// Set default based on type - for old save-states that don't contain a 'shift key mod' value
 }
 
 //---
@@ -375,6 +377,7 @@ static void ParseUnit()
 	}
 	else if (unit == GetSnapshotUnitGameIOConnectorName())
 	{
+		ShiftKeyModLoadSnapshot(yamlLoadHelper, unitVersion, UNIT_GAME_IO_CONNECTOR_VER);
 		CopyProtectionDongleLoadSnapshot(yamlLoadHelper, unitVersion, UNIT_GAME_IO_CONNECTOR_VER);
 	}
 	else if (unit == GetSnapshotUnitMiscName())
@@ -526,6 +529,7 @@ void Snapshot_SaveState()
 		MemSaveSnapshotAux(yamlSaveHelper);
 
 		// Unit: Slots
+		if (!GetCardMgr().AllSlotsEmpty())
 		{
 			yamlSaveHelper.UnitHdr(GetSnapshotUnitSlotsName(), UNIT_SLOTS_VER);
 			YamlSaveHelper::Label state(yamlSaveHelper, "%s:\n", SS_YAML_KEY_STATE);
@@ -534,12 +538,13 @@ void Snapshot_SaveState()
 		}
 
 		// Unit: Game I/O Connector
-		if (GetCopyProtectionDongleType() != DT_EMPTY)
 		{
 			yamlSaveHelper.UnitHdr(GetSnapshotUnitGameIOConnectorName(), UNIT_GAME_IO_CONNECTOR_VER);
 			YamlSaveHelper::Label unit(yamlSaveHelper, "%s:\n", SS_YAML_KEY_STATE);
+			ShiftKeyModSaveSnapshot(yamlSaveHelper);
 
-			CopyProtectionDongleSaveSnapshot(yamlSaveHelper);
+			if (GetCopyProtectionDongleType() != DT_EMPTY)
+				CopyProtectionDongleSaveSnapshot(yamlSaveHelper);
 		}
 
 		// Miscellaneous

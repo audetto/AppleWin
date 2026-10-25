@@ -79,16 +79,6 @@ void Win32Frame::SetLoadedSaveStateFlag(const bool bFlag)
 	g_bLoadedSaveState = bFlag;
 }
 
-bool GetHookAltTab()
-{
-	return g_bHookAltTab;
-}
-
-bool GetHookAltGrControl()
-{
-	return g_bHookAltGrControl;
-}
-
 bool GetFullScreenResolutionChangedByUser()
 {
 	return g_fullScreenResolutionChangedByUser;
@@ -566,11 +556,7 @@ int APIENTRY WinMain(HINSTANCE passinstance, HINSTANCE, LPSTR lpCmdLine, int)
 			DSUninit();
 			LogFileOutput("Main: DSUninit()\n");
 
-			if (g_bHookSystemKey)
-			{
-				GetHookFilter().UninitHookThread();
-				LogFileOutput("Main: UnhookFilterForKeyboard()\n");
-			}
+			GetHookFilter().UninitHookThread();
 		}
 		while (g_bRestart);
 
@@ -737,6 +723,9 @@ static void RepeatInitialization()
 	JoyInitialize();
 	LogFileOutput("Main: JoyInitialize()\n");
 
+	JoyUnplug(g_cmdLine.noJoystick[0], g_cmdLine.noJoystick[1]);
+	g_cmdLine.noJoystick[0] = g_cmdLine.noJoystick[1] = false;
+
 	// Init palette color
 	VideoSwitchVideocardPalette(RGB_GetVideocard(), GetVideo().GetVideoType());
 
@@ -810,6 +799,11 @@ static void RepeatInitialization()
 			const SSI263Type type = g_cmdLine.slotInfo[i].socketSC01;
 			if (type != SSI263Unknown)
 				dynamic_cast<MockingboardCard&>(GetCardMgr().GetRef(i)).SetSocketSC01(type);
+		}
+		else if (GetCardMgr().QuerySlot(i) == CT_SSC)
+		{
+			if (g_cmdLine.sscTcpPort)
+				dynamic_cast<CSuperSerialCard&>(GetCardMgr().GetRef(i)).SetTcpPort(g_cmdLine.sscTcpPort);
 		}
 	}
 
@@ -931,10 +925,18 @@ static void RepeatInitialization()
 		LogFileOutput("Main: RegisterHotKeys()\n");
 	}
 
-	if (g_bHookSystemKey)
+	if (g_bHookSystemKey)					// set by -hook-system-key etc cmd line switches
 	{
-		if (GetHookFilter().InitHookThread())	// needs valid g_hFrameWindow (for message pump)
-			LogFileOutput("Main: HookFilterForKeyboard()\n");
+		GetPropertySheet().SetHookSystemKeys(true);	// overrides Registry value
+		GetPropertySheet().SetHookAltTab(g_bHookAltTab);
+		GetPropertySheet().SetHookAltGrControl(g_bHookAltGrControl);
+	}
+	if (GetPropertySheet().GetHookSystemKeys())
+		GetHookFilter().InitHookThread();	// needs valid g_hFrameWindow (for message pump)
+
+	if (g_configAltEnterForEmulation)
+	{
+		GetPropertySheet().SetHookAltEnterForEmulation(true);	// overrides Registry value
 	}
 
 	// Need to test if it's safe to call ResetMachineState(). In the meantime, just Reset() all cards:
