@@ -290,6 +290,7 @@ else()
 endif()
 
 target_link_libraries(appleii PUBLIC
+  spng
   yaml
   minizip
   )
