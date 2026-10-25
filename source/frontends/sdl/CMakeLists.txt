@@ -175,6 +175,7 @@ if (EMSCRIPTEN)
   set(EMSC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/emsc)
 
   target_link_options(sa2 PRIVATE
+    # --emrun
     -sFULL_ES3=1
     -sMIN_WEBGL_VERSION=2
     "SHELL:-lidbfs.js"

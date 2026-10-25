@@ -2716,9 +2716,9 @@ static void GenerateBaseColors(baseColors_t pBaseNtscColors)
 		int r = (((colors[0]>>16)&0xff) + ((colors[1]>>16)&0xff) + ((colors[2]>>16)&0xff) + ((colors[3]>>16)&0xff)) / 4;
 		int g = (((colors[0]>> 8)&0xff) + ((colors[1]>> 8)&0xff) + ((colors[2]>> 8)&0xff) + ((colors[3]>> 8)&0xff)) / 4;
 		int b = (((colors[0]    )&0xff) + ((colors[1]    )&0xff) + ((colors[2]    )&0xff) + ((colors[3]    )&0xff)) / 4;
-		uint32_t color = ((r<<16) | (g<<8) | b) | ALPHA32_MASK;
+		bgra_t color = makeBGRA(b, g, r, ALPHA);
 
-		(*pBaseNtscColors)[i] = * (bgra_t*) &color;
+		(*pBaseNtscColors)[i] = color;
 	}
 }
 

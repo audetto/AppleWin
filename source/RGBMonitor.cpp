@@ -114,9 +114,9 @@ const BYTE DoubleHiresPalIndex[16] = {
 		ORANGE,  PINK,      YELLOW,    WHITE
 	};
 
-static RGBQUAD* g_pPaletteRGB;
+static bgra_t* g_pPaletteRGB;
 
-static RGBQUAD PaletteRGB_NTSC[] =
+static bgra_t PaletteRGB_NTSC[] =
 {
 // hires
 #if DO_OPT_PALETTE
@@ -166,7 +166,7 @@ static RGBQUAD PaletteRGB_NTSC[] =
 
 // Le Chat Mauve Feline's palette
 // extracted from a white-balanced RGB video capture
-static RGBQUAD PaletteRGB_Feline[] =
+static bgra_t PaletteRGB_Feline[] =
 {
 	SETRGBCOLOR(/*HGR_BLACK, */ 0x00,0x00,0x00),
 	SETRGBCOLOR(/*HGR_WHITE, */ 0xFF,0xFF,0xFF),
@@ -529,7 +529,7 @@ static void CopyMixedSource(int x, int y, int sx, int sy, bgra_t *pVideoAddress)
 		// color mixing between adjacent scanlines at current x position
 		MixColorsVertical(matx+nBytes, maty, isSWMIXED);	//Post: colormixbuffer[]
 
-		UINT32* pDst = (UINT32*) pVideoAddress;
+		bgra_t* pDst = pVideoAddress;
 
 		for (int h=HGR_MATRIX_YOFFSET; h<=HGR_MATRIX_YOFFSET+1; h++)
 		{
@@ -541,8 +541,8 @@ static void CopyMixedSource(int x, int y, int sx, int sy, bgra_t *pVideoAddress)
 			else
 			{
 				_ASSERT( colormixbuffer[h] < (sizeof(PaletteRGB_NTSC)/sizeof(PaletteRGB_NTSC[0])) );
-				const RGBQUAD& rRGB = g_pPaletteRGB[ colormixbuffer[h] ];
-				*(pDst+nBytes) = *reinterpret_cast<const UINT32 *>(&rRGB);
+				const bgra_t& rRGB = g_pPaletteRGB[ colormixbuffer[h] ];
+				*(pDst+nBytes) = rRGB;
 			}
 
 			pDst -= frameBufferWidth;
@@ -555,7 +555,7 @@ static void CopyMixedSource(int x, int y, int sx, int sy, bgra_t *pVideoAddress)
 // Pre: nSrcAdjustment: for 160-color images, src is +1 compared to dst
 static void CopySource(int w, int h, int sx, int sy, bgra_t *pVideoAddress, const int nSrcAdjustment = 0)
 {
-	UINT32* pDst = (UINT32*) pVideoAddress;
+	bgra_t* pDst = pVideoAddress;
 	const BYTE* const pSrc = g_aSourceStartofLine[ sy ] + sx;
 
 	const bool bIsHalfScanLines = GetVideo().IsVideoStyle(VS_HALF_SCANLINES);
@@ -573,8 +573,8 @@ static void CopySource(int w, int h, int sx, int sy, bgra_t *pVideoAddress, cons
 			for (int nBytes=0; nBytes<w; ++nBytes)
 			{
 				_ASSERT( *(pSrc+nBytes+nSrcAdjustment) < (sizeof(PaletteRGB_NTSC)/sizeof(PaletteRGB_NTSC[0])) );
-				const RGBQUAD& rRGB = g_pPaletteRGB[ *(pSrc+nBytes+nSrcAdjustment) ];
-				*(pDst+nBytes) = *reinterpret_cast<const UINT32 *>(&rRGB);
+				const bgra_t& rRGB = g_pPaletteRGB[ *(pSrc+nBytes+nSrcAdjustment) ];
+				*(pDst+nBytes) = rRGB;
 			}
 		}
 
@@ -667,7 +667,7 @@ void UpdateHiResRGBCell(int x, int y, uint16_t addr, bgra_t* pVideoAddress)
 	uint32_t dwordval = (byteval1 & 0x7F) | ((byteval2 & 0x7F) << 7) | ((byteval3 & 0x7F) << 14) | ((byteval4 & 0x7F) << 21);
 
 	// Extraction of 14 color pixels
-	UINT32 colors[14];
+	bgra_t colors[14];
 	int color = 0;
 	uint32_t dwordval_tmp = dwordval;
 	dwordval_tmp = dwordval_tmp >> 7;
@@ -678,15 +678,15 @@ void UpdateHiResRGBCell(int x, int y, uint16_t addr, bgra_t* pVideoAddress)
 		color = dwordval_tmp & 0x3;
 		// Two cases because AppleWin's palette is in a strange order
 		if (offset)
-			colors[i] = *reinterpret_cast<const UINT32*>(&g_pPaletteRGB[1 + color]);
+			colors[i] = g_pPaletteRGB[1 + color];
 		else
-			colors[i] = *reinterpret_cast<const UINT32*>(&g_pPaletteRGB[6 - color]);
+			colors[i] = g_pPaletteRGB[6 - color];
 		if (i%2) dwordval_tmp >>= 2;
 	}
 	// Black and White
-	UINT32 bw[2];
-	bw[0] = *reinterpret_cast<const UINT32*>(&g_pPaletteRGB[0]);
-	bw[1] = *reinterpret_cast<const UINT32*>(&g_pPaletteRGB[1]);
+	bgra_t bw[2];
+	bw[0] = g_pPaletteRGB[0];
+	bw[1] = g_pPaletteRGB[1];
 
 	uint32_t mask  =  0x01C0; //  00|000001 1|1000000
 	uint32_t chck1 =  0x0140; //  00|000001 0|1000000
@@ -697,7 +697,7 @@ void UpdateHiResRGBCell(int x, int y, uint16_t addr, bgra_t* pVideoAddress)
 	// In all other cases, it's black if 0 and white if 1
 	// The value of 'color' is defined on a 2-bits basis
 
-	UINT32* pDst = (UINT32*)pVideoAddress;
+	bgra_t* pDst = pVideoAddress;
 
 	if (xoffset)
 	{
@@ -729,7 +729,7 @@ void UpdateHiResRGBCell(int x, int y, uint16_t addr, bgra_t* pVideoAddress)
 	const bool bIsHalfScanLines = GetVideo().IsVideoStyle(VS_HALF_SCANLINES);
 
 	// Second line
-	UINT32* pSrc = (UINT32*)pVideoAddress;
+	bgra_t* pSrc = pVideoAddress;
 	pDst = pSrc - GetVideo().GetFrameBufferWidth();
 	if (bIsHalfScanLines)
 	{
@@ -766,19 +766,19 @@ void UpdateDHiResCellRGB(int x, int y, uint16_t addr, bgra_t* pVideoAddress, boo
 
 	// Extraction of 7 color pixels and 7x4 bits
 	int bits[7];
-	UINT32 colors[7];
+	bgra_t colors[7];
 	int color = 0;
 	uint32_t dwordval_tmp = dwordval;
 	for (int i = 0; i < 7; i++)
 	{
 		bits[i] = dwordval_tmp & 0xF;
 		color = ((bits[i] & 7) << 1) | ((bits[i] & 8) >> 3); // DHGR colors are rotated 1 bit to the right
-		colors[i] = *reinterpret_cast<const UINT32*>(&g_pPaletteRGB[12 + color]);
+		colors[i] = g_pPaletteRGB[12 + color];
 		dwordval_tmp >>= 4;
 	}
-	UINT32 bw[2];
-	bw[0] = *reinterpret_cast<const UINT32*>(&g_pPaletteRGB[12 + 0]);
-	bw[1] = *reinterpret_cast<const UINT32*>(&g_pPaletteRGB[12 + 15]);
+	bgra_t bw[2];
+	bw[0] = g_pPaletteRGB[12 + 0];
+	bw[1] = g_pPaletteRGB[12 + 15];
 
 	if (isBit7Inversed)
 	{
@@ -800,7 +800,7 @@ void UpdateDHiResCellRGB(int x, int y, uint16_t addr, bgra_t* pVideoAddress, boo
 	//
 	// (Tested on Le Chat Mauve IIc adapter, which was made under patent of Video-7)
 
-	UINT32* pDst = (UINT32*)pVideoAddress;
+	bgra_t* pDst = pVideoAddress;
 
 	if (xoffset == 0)	// First cell
 	{
@@ -944,7 +944,7 @@ void UpdateDHiResCellRGB(int x, int y, uint16_t addr, bgra_t* pVideoAddress, boo
 	const bool bIsHalfScanLines = GetVideo().IsVideoStyle(VS_HALF_SCANLINES);
 
 	// Second line
-	UINT32* pSrc = (UINT32*)pVideoAddress ;
+	bgra_t* pSrc = pVideoAddress ;
 	pDst = pSrc - GetVideo().GetFrameBufferWidth();
 	if (bIsHalfScanLines)
 	{
@@ -1119,11 +1119,11 @@ void UpdateHiResDuochromeCell(int x, int y, uint16_t addr, bgra_t* pVideoAddress
 // Can be used in TEXT or HGR mode. The foreground & background colors could be fixed by hardware switches or data lying in AUX.
 void UpdateDuochromeCell(int h, int w, bgra_t* pVideoAddress, uint8_t bits, uint8_t foreground, uint8_t background)
 {
-	UINT32* pDst = (UINT32*)pVideoAddress;
+	bgra_t* pDst = pVideoAddress;
 
 	const bool bIsHalfScanLines = GetVideo().IsVideoStyle(VS_HALF_SCANLINES);
 	const UINT frameBufferWidth = GetVideo().GetFrameBufferWidth();
-	RGBQUAD colors[2];
+	bgra_t colors[2];
 	// use LoRes palette
 	background += 12;
 	foreground += 12;
@@ -1147,11 +1147,11 @@ void UpdateDuochromeCell(int h, int w, bgra_t* pVideoAddress, uint8_t bits, uint
 			{
 				int bit = (bits & 1);
 				bits >>= 1;
-				const RGBQUAD& rRGB = colors[bit];
-				*(pDst + nBytes) = *reinterpret_cast<const UINT32*>(&rRGB);
+				const bgra_t& rRGB = colors[bit];
+				*(pDst + nBytes) = rRGB;
 				if (doublepixels)
 				{
-					*(pDst + nBytes + 1) = *reinterpret_cast<const UINT32*>(&rRGB);
+					*(pDst + nBytes + 1) = rRGB;
 				}
 			}
 		}
