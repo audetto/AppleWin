@@ -267,6 +267,7 @@ namespace
                     {"Monochrome (Green)", VT_MONO_GREEN},
                     {"Monochrome (White)", VT_MONO_WHITE},
                 },
+                "Color TV",
             },
             REG_CONFIG,
             REGVALUE_VIDEO_MODE,
