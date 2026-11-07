@@ -16,7 +16,6 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          sudo apt-get update
           sudo apt-get -y install $(cat source/linux/raspbian.list.txt)
 
       - name: cmake version
@@ -26,11 +25,6 @@ jobs:
         run: |
           cmake -B build
           cmake --build build
-
-      - name: Qt5 build
-        run: |
-          cmake -B build-qt5 -DBUILD_QAPPLE=ON -DQAPPLE_USE_QT5=ON
-          cmake --build build-qt5
 
       - name: libretro build
         run: |
