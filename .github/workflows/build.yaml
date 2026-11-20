@@ -16,6 +16,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
+          sudo apt-get update
           sudo apt-get -y install $(cat source/linux/raspbian.list.txt)
 
       - name: cmake version
